@@ -1,0 +1,205 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # PostgreSQL Master (Primary)
+  # ============================================================
+  postgres-master:
+    image: postgres:16-alpine
+    container_name: findplace-postgres-master
+    environment:
+      POSTGRES_DB: ${DB_NAME:-findplace}
+      POSTGRES_USER: ${DB_USERNAME:-findplace}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-findplace123!}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres-master-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+      - ./docker/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    ports:
+      - "5432:5432"
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c hot_standby=on
+      -c hba_file=/etc/postgresql/pg_hba.conf
+    networks:
+      - findplace-network
+    healthcheck:
+      test: pg_isready -U findplace -d findplace
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # PostgreSQL Slave 1 (Replica)
+  # ============================================================
+  postgres-slave1:
+    image: postgres:16-alpine
+    container_name: findplace-postgres-slave1
+    environment:
+      POSTGRES_DB: ${DB_NAME:-findplace}
+      POSTGRES_USER: ${DB_USERNAME:-findplace}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-findplace123!}
+      PGUSER: replicator
+      PGPASSWORD: replicator123!
+    volumes:
+      - postgres-slave1-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-slave.sh:/init-slave.sh
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        rm -rf /var/lib/postgresql/data/*
+        until pg_basebackup -h postgres-master -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R; do
+          echo 'Waiting for master to be ready...'
+          sleep 5
+        done
+        chown -R postgres:postgres /var/lib/postgresql/data
+        chmod 700 /var/lib/postgresql/data
+        exec su-exec postgres postgres
+    networks:
+      - findplace-network
+    healthcheck:
+      test: pg_isready -U findplace
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # PostgreSQL Slave 2 (Replica)
+  # ============================================================
+  postgres-slave2:
+    image: postgres:16-alpine
+    container_name: findplace-postgres-slave2
+    environment:
+      POSTGRES_DB: ${DB_NAME:-findplace}
+      POSTGRES_USER: ${DB_USERNAME:-findplace}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-findplace123!}
+      PGUSER: replicator
+      PGPASSWORD: replicator123!
+    volumes:
+      - postgres-slave2-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-slave.sh:/init-slave.sh
+    ports:
+      - "5434:5432"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        rm -rf /var/lib/postgresql/data/*
+        until pg_basebackup -h postgres-master -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R; do
+          echo 'Waiting for master to be ready...'
+          sleep 5
+        done
+        chown -R postgres:postgres /var/lib/postgresql/data
+        chmod 700 /var/lib/postgresql/data
+        exec su-exec postgres postgres
+    networks:
+      - findplace-network
+    healthcheck:
+      test: pg_isready -U findplace
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Redis (Cache & Session)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: findplace-redis
+    command: redis-server --appendonly yes --requirepass redis123!
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - findplace-network
+    healthcheck:
+      test: redis-cli -a redis123! ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # MinIO (S3 Compatible Storage)
+  # ============================================================
+  minio:
+    image: minio/minio:latest
+    container_name: findplace-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123!}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - findplace-network
+    healthcheck:
+      test: curl -f http://localhost:9000/minio/health/live || exit 1
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ============================================================
+  # MinIO Client (Bucket 초기화)
+  # ============================================================
+  minio-init:
+    image: minio/mc:latest
+    container_name: findplace-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: /bin/sh -c
+    command: >
+      "mc alias set myminio http://minio:9000 minioadmin minioadmin123! &&
+       mc mb myminio/findplace --ignore-existing &&
+       mc anonymous set public myminio/findplace/public &&
+       echo 'MinIO bucket initialized'"
+    networks:
+      - findplace-network
+
+  # ============================================================
+  # Nginx (Reverse Proxy) - 개발용
+  # ============================================================
+  nginx:
+    image: nginx:alpine
+    container_name: findplace-nginx
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - redis
+    networks:
+      - findplace-network
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  findplace-network:
+    driver: bridge
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  postgres-master-data:
+  postgres-slave1-data:
+  postgres-slave2-data:
+  redis-data:
+  minio-data:

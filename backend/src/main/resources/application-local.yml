@@ -1,0 +1,11 @@
+# Local Development Profile
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+logging:
+  level:
+    root: DEBUG
+    com.findplace: DEBUG
