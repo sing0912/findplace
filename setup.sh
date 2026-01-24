@@ -204,9 +204,8 @@ start_services() {
 
     # 1. 인프라 서비스 시작
     print_info "인프라 서비스 시작 중..."
-    cd "$PROJECT_ROOT/infra"
-    $COMPOSE_CMD up -d
     cd "$PROJECT_ROOT"
+    $COMPOSE_CMD up -d
 
     # 인프라 준비 대기
     print_info "인프라 준비 대기 중 (30초)..."
@@ -316,9 +315,8 @@ stop_services() {
     print_info "인프라 서비스 중지 중..."
     COMPOSE_CMD=$(get_compose_command)
     if [ -n "$COMPOSE_CMD" ]; then
-        cd "$PROJECT_ROOT/infra"
-        $COMPOSE_CMD down
         cd "$PROJECT_ROOT"
+        $COMPOSE_CMD down
     fi
 
     print_success "모든 서비스 중지 완료"
@@ -337,9 +335,8 @@ check_status() {
     echo ""
     echo -e "${BLUE}[인프라 서비스]${NC}"
     if [ -n "$COMPOSE_CMD" ]; then
-        cd "$PROJECT_ROOT/infra"
-        $COMPOSE_CMD ps
         cd "$PROJECT_ROOT"
+        $COMPOSE_CMD ps
     fi
 
     # 백엔드 상태
