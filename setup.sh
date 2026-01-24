@@ -9,6 +9,7 @@
 #   ./setup.sh start        # 서비스 시작만
 #   ./setup.sh stop         # 서비스 중지
 #   ./setup.sh status       # 서비스 상태 확인
+#   ./setup.sh clean        # 모든 데이터 삭제 및 초기화
 #===============================================================================
 
 set -e
@@ -22,6 +23,9 @@ NC='\033[0m' # No Color
 
 # 프로젝트 루트 디렉토리
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+# 사용하는 포트 목록
+REQUIRED_PORTS=(80 3000 5432 5433 5434 6379 8080 9000 9001)
 
 #-------------------------------------------------------------------------------
 # 유틸리티 함수
@@ -72,13 +76,47 @@ get_container_runtime() {
 get_compose_command() {
     if check_command podman-compose; then
         echo "podman-compose"
-    elif check_command "docker-compose"; then
+    elif check_command docker-compose; then
         echo "docker-compose"
     elif check_command docker && docker compose version &> /dev/null; then
         echo "docker compose"
     else
         echo ""
     fi
+}
+
+#-------------------------------------------------------------------------------
+# 포트 사용 확인 및 정리
+#-------------------------------------------------------------------------------
+kill_port_process() {
+    local port=$1
+    local pids=$(lsof -ti :$port 2>/dev/null || true)
+
+    if [ -n "$pids" ]; then
+        print_warning "포트 $port 사용 중인 프로세스 종료 중..."
+        for pid in $pids; do
+            kill -9 $pid 2>/dev/null || true
+        done
+        sleep 1
+        print_success "포트 $port 해제됨"
+    fi
+}
+
+check_and_free_ports() {
+    print_info "필수 포트 확인 및 정리 중..."
+
+    for port in "${REQUIRED_PORTS[@]}"; do
+        kill_port_process $port
+    done
+
+    # 시스템 서비스 중지
+    if check_command systemctl; then
+        systemctl stop httpd 2>/dev/null || true
+        systemctl stop apache2 2>/dev/null || true
+        systemctl stop nginx 2>/dev/null || true
+    fi
+
+    print_success "포트 정리 완료"
 }
 
 #-------------------------------------------------------------------------------
@@ -101,54 +139,79 @@ install_dependencies() {
 install_linux() {
     print_info "Linux 환경 감지됨"
 
-    # 패키지 매니저 업데이트
-    if check_command apt; then
-        sudo apt update
-
-        # Java 21
-        if ! check_command java || ! java -version 2>&1 | grep -q "21"; then
-            print_info "Java 21 설치 중..."
-            sudo apt install -y openjdk-21-jdk
-        else
-            print_success "Java 21 이미 설치됨"
-        fi
-
-        # Node.js
-        if ! check_command node; then
-            print_info "Node.js 설치 중..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt install -y nodejs
-        else
-            print_success "Node.js 이미 설치됨: $(node -v)"
-        fi
-
-        # Docker
-        if ! check_command docker; then
-            print_info "Docker 설치 중..."
-            sudo apt install -y docker.io docker-compose
-            sudo usermod -aG docker $USER
-            print_warning "Docker 그룹 적용을 위해 재로그인이 필요할 수 있습니다"
-        else
-            print_success "Docker 이미 설치됨"
-        fi
-
+    # 패키지 매니저 감지
+    if check_command dnf; then
+        PKG_MANAGER="dnf"
     elif check_command yum; then
-        # RHEL/CentOS
-        print_info "Java 21 설치 중..."
-        sudo yum install -y java-21-openjdk-devel
-
-        print_info "Node.js 설치 중..."
-        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-        sudo yum install -y nodejs
-
-        print_info "Docker 설치 중..."
-        sudo yum install -y docker docker-compose
-        sudo systemctl start docker
-        sudo systemctl enable docker
-        sudo usermod -aG docker $USER
+        PKG_MANAGER="yum"
+    elif check_command apt; then
+        PKG_MANAGER="apt"
     else
         print_error "지원하지 않는 패키지 매니저입니다"
         exit 1
+    fi
+
+    # Java 21
+    if ! check_command java || ! java -version 2>&1 | grep -q "21"; then
+        print_info "Java 21 설치 중..."
+        if [ "$PKG_MANAGER" = "apt" ]; then
+            sudo apt update
+            sudo apt install -y openjdk-21-jdk
+        else
+            sudo $PKG_MANAGER install -y java-21-openjdk-devel
+        fi
+    else
+        print_success "Java 21 이미 설치됨"
+    fi
+
+    # Node.js
+    if ! check_command node; then
+        print_info "Node.js 설치 중..."
+        if [ "$PKG_MANAGER" = "apt" ]; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt install -y nodejs
+        else
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            sudo $PKG_MANAGER install -y nodejs
+        fi
+    else
+        print_success "Node.js 이미 설치됨: $(node -v)"
+    fi
+
+    # Docker
+    if ! check_command docker; then
+        print_info "Docker 설치 중..."
+        if [ "$PKG_MANAGER" = "apt" ]; then
+            sudo apt install -y docker.io
+        else
+            sudo $PKG_MANAGER install -y docker
+        fi
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        sudo usermod -aG docker $USER 2>/dev/null || true
+    else
+        print_success "Docker 이미 설치됨"
+        # Docker 서비스 시작 확인
+        if ! systemctl is-active --quiet docker; then
+            print_info "Docker 서비스 시작 중..."
+            sudo systemctl start docker
+        fi
+    fi
+
+    # docker-compose (별도 설치)
+    if ! check_command docker-compose; then
+        print_info "docker-compose 설치 중..."
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+
+        if check_command docker-compose; then
+            print_success "docker-compose 설치 완료: $(docker-compose --version)"
+        else
+            print_error "docker-compose 설치 실패"
+            exit 1
+        fi
+    else
+        print_success "docker-compose 이미 설치됨"
     fi
 }
 
@@ -165,7 +228,7 @@ install_macos() {
     if ! check_command java || ! java -version 2>&1 | grep -q "21"; then
         print_info "Java 21 설치 중..."
         brew install openjdk@21
-        sudo ln -sfn $(brew --prefix)/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+        sudo ln -sfn $(brew --prefix)/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk 2>/dev/null || true
     else
         print_success "Java 21 이미 설치됨"
     fi
@@ -182,8 +245,8 @@ install_macos() {
     if ! check_command docker && ! check_command podman; then
         print_info "Podman 설치 중..."
         brew install podman podman-compose
-        podman machine init
-        podman machine start
+        podman machine init 2>/dev/null || true
+        podman machine start 2>/dev/null || true
     else
         print_success "컨테이너 런타임 이미 설치됨"
     fi
@@ -199,8 +262,23 @@ start_services() {
     COMPOSE_CMD=$(get_compose_command)
     if [ -z "$COMPOSE_CMD" ]; then
         print_error "Docker 또는 Podman이 설치되어 있지 않습니다"
+        print_info "먼저 ./setup.sh install 을 실행하세요"
         exit 1
     fi
+
+    # 포트 정리
+    check_and_free_ports
+
+    # 중복 compose 파일 정리
+    if [ -f "$PROJECT_ROOT/compose.yaml" ] && [ -f "$PROJECT_ROOT/docker-compose.yml" ]; then
+        print_warning "중복 compose 파일 발견, compose.yaml 삭제..."
+        rm -f "$PROJECT_ROOT/compose.yaml"
+    fi
+
+    # 기존 컨테이너 정리
+    print_info "기존 컨테이너 정리 중..."
+    cd "$PROJECT_ROOT"
+    $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
 
     # 1. 인프라 서비스 시작
     print_info "인프라 서비스 시작 중..."
@@ -208,41 +286,68 @@ start_services() {
     $COMPOSE_CMD up -d
 
     # 인프라 준비 대기
-    print_info "인프라 준비 대기 중 (30초)..."
-    sleep 30
+    print_info "인프라 준비 대기 중 (40초)..."
+    sleep 40
 
     # 인프라 상태 확인
     check_infrastructure
 
     # 2. 백엔드 시작
     print_info "백엔드 빌드 및 시작 중..."
+
+    # 기존 백엔드 프로세스 종료
+    pkill -f "gradlew.*bootRun" 2>/dev/null || true
+    pkill -f "java.*findplace" 2>/dev/null || true
+    sleep 2
+
     cd "$PROJECT_ROOT/backend"
     chmod +x gradlew
-    ./gradlew build -x test
-    ./gradlew bootRun > /tmp/findplace-backend.log 2>&1 &
+
+    # Gradle 빌드
+    print_info "Gradle 빌드 중..."
+    ./gradlew build -x test --no-daemon 2>&1 | tail -20
+
+    # 백엔드 실행
+    print_info "백엔드 서버 시작 중..."
+    nohup ./gradlew bootRun --no-daemon > /tmp/findplace-backend.log 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > /tmp/findplace-backend.pid
     cd "$PROJECT_ROOT"
 
     # 백엔드 준비 대기
-    print_info "백엔드 준비 대기 중 (20초)..."
-    sleep 20
+    print_info "백엔드 준비 대기 중 (30초)..."
+    sleep 30
 
     # 백엔드 상태 확인
-    if curl -s http://localhost:8080/api/actuator/health | grep -q "UP"; then
-        print_success "백엔드 시작 완료"
-    else
-        print_warning "백엔드 상태 확인 필요 - 로그: /tmp/findplace-backend.log"
-    fi
+    for i in {1..10}; do
+        if curl -s http://localhost:8080/api/actuator/health 2>/dev/null | grep -q "UP"; then
+            print_success "백엔드 시작 완료"
+            break
+        fi
+        if [ $i -eq 10 ]; then
+            print_warning "백엔드 상태 확인 필요 - 로그: /tmp/findplace-backend.log"
+        fi
+        sleep 3
+    done
 
     # 3. 프론트엔드 시작
     print_info "프론트엔드 설치 및 시작 중..."
+
+    # 기존 프론트엔드 프로세스 종료
+    pkill -f "react-scripts" 2>/dev/null || true
+    pkill -f "node.*start" 2>/dev/null || true
+    sleep 2
+
     cd "$PROJECT_ROOT/frontend"
     npm install
-    npm start > /tmp/findplace-frontend.log 2>&1 &
+    nohup npm start > /tmp/findplace-frontend.log 2>&1 &
     FRONTEND_PID=$!
     echo $FRONTEND_PID > /tmp/findplace-frontend.pid
     cd "$PROJECT_ROOT"
+
+    # 프론트엔드 준비 대기
+    print_info "프론트엔드 준비 대기 중 (15초)..."
+    sleep 15
 
     # 완료 메시지
     print_header "서비스 시작 완료"
@@ -250,7 +355,7 @@ start_services() {
     echo -e "  ${GREEN}프론트엔드${NC}: http://localhost:3000"
     echo -e "  ${GREEN}백엔드 API${NC}: http://localhost:8080/api"
     echo -e "  ${GREEN}Swagger UI${NC}: http://localhost:8080/api/swagger-ui.html"
-    echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001"
+    echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001 (minioadmin / minioadmin123!)"
     echo ""
     echo -e "  로그 확인:"
     echo -e "    백엔드: tail -f /tmp/findplace-backend.log"
@@ -298,15 +403,16 @@ stop_services() {
     print_info "프론트엔드 중지 중..."
     if [ -f /tmp/findplace-frontend.pid ]; then
         kill $(cat /tmp/findplace-frontend.pid) 2>/dev/null || true
-        rm /tmp/findplace-frontend.pid
+        rm -f /tmp/findplace-frontend.pid
     fi
     pkill -f "react-scripts" 2>/dev/null || true
+    pkill -f "node.*start" 2>/dev/null || true
 
     # 백엔드 중지
     print_info "백엔드 중지 중..."
     if [ -f /tmp/findplace-backend.pid ]; then
         kill $(cat /tmp/findplace-backend.pid) 2>/dev/null || true
-        rm /tmp/findplace-backend.pid
+        rm -f /tmp/findplace-backend.pid
     fi
     pkill -f "gradlew.*bootRun" 2>/dev/null || true
     pkill -f "java.*findplace" 2>/dev/null || true
@@ -316,7 +422,7 @@ stop_services() {
     COMPOSE_CMD=$(get_compose_command)
     if [ -n "$COMPOSE_CMD" ]; then
         cd "$PROJECT_ROOT"
-        $COMPOSE_CMD down
+        $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
     fi
 
     print_success "모든 서비스 중지 완료"
@@ -361,6 +467,42 @@ check_status() {
 }
 
 #-------------------------------------------------------------------------------
+# 전체 초기화 (데이터 삭제)
+#-------------------------------------------------------------------------------
+clean_all() {
+    print_header "FindPlace 전체 초기화"
+
+    print_warning "모든 데이터가 삭제됩니다!"
+    read -p "계속하시겠습니까? (y/N): " confirm
+
+    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+        print_info "취소되었습니다"
+        exit 0
+    fi
+
+    # 서비스 중지
+    stop_services
+
+    # Docker 볼륨 삭제
+    COMPOSE_CMD=$(get_compose_command)
+    if [ -n "$COMPOSE_CMD" ]; then
+        cd "$PROJECT_ROOT"
+        $COMPOSE_CMD down -v 2>/dev/null || true
+    fi
+
+    # 빌드 파일 삭제
+    rm -rf "$PROJECT_ROOT/backend/build" 2>/dev/null || true
+    rm -rf "$PROJECT_ROOT/frontend/node_modules" 2>/dev/null || true
+    rm -rf "$PROJECT_ROOT/frontend/build" 2>/dev/null || true
+
+    # 로그 파일 삭제
+    rm -f /tmp/findplace-*.log 2>/dev/null || true
+    rm -f /tmp/findplace-*.pid 2>/dev/null || true
+
+    print_success "초기화 완료"
+}
+
+#-------------------------------------------------------------------------------
 # 메인 로직
 #-------------------------------------------------------------------------------
 main() {
@@ -382,18 +524,22 @@ main() {
             sleep 3
             start_services
             ;;
+        clean)
+            clean_all
+            ;;
         ""|all)
             install_dependencies
             start_services
             ;;
         *)
-            echo "사용법: $0 {install|start|stop|status|restart|all}"
+            echo "사용법: $0 {install|start|stop|status|restart|clean|all}"
             echo ""
             echo "  install  - 필수 소프트웨어 설치"
             echo "  start    - 서비스 시작"
             echo "  stop     - 서비스 중지"
             echo "  status   - 서비스 상태 확인"
             echo "  restart  - 서비스 재시작"
+            echo "  clean    - 모든 데이터 삭제 및 초기화"
             echo "  all      - 전체 설치 및 시작 (기본값)"
             exit 1
             ;;
