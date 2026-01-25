@@ -14,6 +14,28 @@
 /api/v{version}/{resource}
 ```
 
+### Context Path 설정
+
+**중요**: `/api` 접두사는 `application.yml`의 `server.servlet.context-path`에서 설정됩니다.
+
+```yaml
+# application.yml
+server:
+  servlet:
+    context-path: /api
+```
+
+따라서 **컨트롤러에서는 `/api` 없이 `/v1/...`만 사용**합니다:
+
+```java
+// 올바른 예
+@RequestMapping("/v1/funeral-homes")
+public class FuneralHomeController { }
+
+// 잘못된 예 (context-path와 중복됨)
+@RequestMapping("/api/v1/funeral-homes")  // ❌ 실제 경로가 /api/api/v1/... 이 됨
+```
+
 ### 규칙
 
 1. **소문자 사용**: `/api/v1/users` (O), `/api/v1/Users` (X)

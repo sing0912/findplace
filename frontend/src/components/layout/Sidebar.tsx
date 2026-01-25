@@ -28,6 +28,7 @@ import {
   Receipt,
   CalendarMonth,
   Dashboard,
+  LocationOn,
 } from '@mui/icons-material';
 import { useUIStore } from '../../stores/uiStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -56,6 +57,7 @@ interface MenuItem {
  */
 const menuItems: MenuItem[] = [
   { text: '홈', icon: <Home />, path: '/' },
+  { text: '내 주변 장례식장', icon: <LocationOn />, path: '/nearby' },
   { text: '장례업체', icon: <Business />, path: '/companies' },
   { text: '상품', icon: <ShoppingCart />, path: '/products' },
   { text: '예약', icon: <CalendarMonth />, path: '/reservations' },

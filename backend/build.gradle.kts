@@ -64,6 +64,16 @@ dependencies {
     // AOP
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
+    // Monitoring - Prometheus
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Observability - OpenTelemetry
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+
+    // Logback - Loki Appender
+    implementation("com.github.loki4j:loki-logback-appender:1.4.2")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

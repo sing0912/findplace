@@ -202,3 +202,12 @@ docs/develop/
 | dashboard | ✅ | ⬜ | ⬜ | ⬜ |
 
 ✅ 완료 | 🔄 진행중 | ⬜ 미시작
+
+---
+
+## 참고 사이트
+
+| 사이트 | URL | 설명 |
+|--------|-----|------|
+| 공공데이터포털 | https://www.data.go.kr | 공공기관 Open API (장례식장 정보 등) |
+| Google Cloud Console | https://console.cloud.google.com | Google Maps API 키 발급 |

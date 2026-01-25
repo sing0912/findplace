@@ -1,0 +1,31 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Backend 로그 수집
+  - job_name: backend
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: findplace-backend
+          app: backend
+          __path__: /var/log/findplace/*.log
+    pipeline_stages:
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2}'
+          max_wait_time: 3s
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s+\[(?P<thread>[^\]]+)\]\s+\[(?P<traceId>[^\]]*)\]\s+(?P<level>\w+)\s+(?P<logger>[^\s]+)\s+-\s+(?P<message>.*)'
+      - labels:
+          level:
+          logger:
+          thread:
+          traceId:

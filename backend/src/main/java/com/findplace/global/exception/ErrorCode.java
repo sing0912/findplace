@@ -55,6 +55,12 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "이미 사용 중인 이메일입니다."),
     /** 이미 존재하는 전화번호 */
     DUPLICATE_PHONE(HttpStatus.CONFLICT, "U003", "이미 사용 중인 전화번호입니다."),
+    /** 잘못된 비밀번호 */
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "U004", "비밀번호가 일치하지 않습니다."),
+    /** 새 비밀번호 불일치 */
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "U005", "새 비밀번호가 일치하지 않습니다."),
+    /** 잘못된 입력값 */
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "U006", "잘못된 입력값입니다."),
 
     // ==================== Company (업체) ====================
     /** 업체를 찾을 수 없음 */
@@ -94,7 +100,41 @@ public enum ErrorCode {
     /** 파일을 찾을 수 없음 */
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F002", "파일을 찾을 수 없습니다."),
     /** 허용되지 않은 파일 형식 */
-    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F003", "허용되지 않은 파일 형식입니다.");
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F003", "허용되지 않은 파일 형식입니다."),
+
+    // ==================== Region (지역) ====================
+    /** 지역을 찾을 수 없음 */
+    REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "RG001", "지역을 찾을 수 없습니다."),
+
+    // ==================== Pet (반려동물) ====================
+    /** 반려동물을 찾을 수 없음 */
+    PET_NOT_FOUND(HttpStatus.NOT_FOUND, "PT001", "반려동물을 찾을 수 없습니다."),
+    /** 반려동물 등록 한도 초과 */
+    PET_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "PT002", "반려동물 등록 한도를 초과했습니다."),
+
+    // ==================== FuneralHome (장례식장) ====================
+    /** 장례식장을 찾을 수 없음 */
+    FUNERAL_HOME_NOT_FOUND(HttpStatus.NOT_FOUND, "FH001", "장례식장을 찾을 수 없습니다."),
+    /** 외부 API 호출 실패 */
+    EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FH002", "외부 API 호출에 실패했습니다."),
+    /** 동기화 진행 중 */
+    SYNC_ALREADY_RUNNING(HttpStatus.CONFLICT, "FH003", "이미 동기화가 진행 중입니다."),
+
+    // ==================== Coupon (쿠폰) ====================
+    /** 쿠폰을 찾을 수 없음 */
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "CP001", "쿠폰을 찾을 수 없습니다."),
+    /** 쿠폰 사용 불가 */
+    COUPON_NOT_USABLE(HttpStatus.BAD_REQUEST, "CP002", "사용할 수 없는 쿠폰입니다."),
+    /** 쿠폰 만료 */
+    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "CP003", "만료된 쿠폰입니다."),
+    /** 쿠폰 수량 소진 */
+    COUPON_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "CP004", "쿠폰이 모두 소진되었습니다."),
+    /** 이미 발급받은 쿠폰 */
+    COUPON_ALREADY_ISSUED(HttpStatus.CONFLICT, "CP005", "이미 발급받은 쿠폰입니다."),
+
+    // ==================== Location (위치) ====================
+    /** 지오코딩 실패 */
+    GEOCODING_FAILED(HttpStatus.BAD_REQUEST, "LC001", "주소를 좌표로 변환하는데 실패했습니다.");
 
     /** HTTP 상태 코드 */
     private final HttpStatus httpStatus;

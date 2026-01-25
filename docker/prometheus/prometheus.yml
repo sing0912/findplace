@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus 자체 메트릭
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Spring Boot Actuator 메트릭
+  - job_name: 'spring-backend'
+    metrics_path: '/api/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          application: 'findplace-backend'
+
+  # Redis 메트릭 (redis_exporter 사용 시)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          application: 'findplace-redis'
+
+  # PostgreSQL 메트릭 (postgres_exporter 사용 시)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-master:5432']
+        labels:
+          application: 'findplace-postgres'
+
+  # Loki 메트릭
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+
+  # Tempo 메트릭
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']

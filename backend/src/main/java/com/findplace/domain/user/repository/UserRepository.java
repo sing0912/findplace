@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -89,4 +91,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "(LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 오늘 생일인 활성 사용자 조회 (배치용)
+     *
+     * @param month 월
+     * @param day 일
+     * @return 생일인 사용자 목록
+     */
+    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL AND u.status = 'ACTIVE' " +
+           "AND MONTH(u.birthDate) = :month AND DAY(u.birthDate) = :day")
+    List<User> findByBirthdayMonthAndDay(@Param("month") int month, @Param("day") int day);
+
+    /**
+     * 휴면 대상 사용자 조회 (배치용)
+     * 활성 상태이면서 마지막 로그인이 지정 시간 이전인 사용자
+     *
+     * @param lastLoginBefore 마지막 로그인 기준 시간
+     * @return 휴면 대상 사용자 목록
+     */
+    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL AND u.status = 'ACTIVE' " +
+           "AND u.lastLoginAt < :lastLoginBefore")
+    List<User> findDormantUsers(@Param("lastLoginBefore") LocalDateTime lastLoginBefore);
 }

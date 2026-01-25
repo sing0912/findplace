@@ -62,6 +62,30 @@ public class User extends BaseEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    /** 생년월일 */
+    @Column(name = "birth_date")
+    private java.time.LocalDate birthDate;
+
+    /** 기본 주소 */
+    @Column(length = 500)
+    private String address;
+
+    /** 상세 주소 */
+    @Column(name = "address_detail", length = 200)
+    private String addressDetail;
+
+    /** 우편번호 */
+    @Column(name = "zip_code", length = 10)
+    private String zipCode;
+
+    /** 위도 */
+    @Column(precision = 10, scale = 7)
+    private java.math.BigDecimal latitude;
+
+    /** 경도 */
+    @Column(precision = 10, scale = 7)
+    private java.math.BigDecimal longitude;
+
     /** 삭제 일시 (Soft Delete) */
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -125,6 +149,13 @@ public class User extends BaseEntity {
     }
 
     /**
+     * 계정 휴면 처리
+     */
+    public void inactivate() {
+        this.status = UserStatus.INACTIVE;
+    }
+
+    /**
      * 계정 소프트 삭제 (논리적 삭제)
      *
      * @param deletedBy 삭제 처리한 관리자 ID
@@ -133,6 +164,33 @@ public class User extends BaseEntity {
         this.status = UserStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = deletedBy;
+    }
+
+    /**
+     * 주소 정보 수정
+     *
+     * @param address 기본 주소
+     * @param addressDetail 상세 주소
+     * @param zipCode 우편번호
+     * @param latitude 위도
+     * @param longitude 경도
+     */
+    public void updateAddress(String address, String addressDetail, String zipCode,
+                              java.math.BigDecimal latitude, java.math.BigDecimal longitude) {
+        this.address = address;
+        this.addressDetail = addressDetail;
+        this.zipCode = zipCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    /**
+     * 생년월일 수정
+     *
+     * @param birthDate 생년월일
+     */
+    public void updateBirthDate(java.time.LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     /**

@@ -110,6 +110,29 @@ services:
       retries: 5
 
   # ============================================================
+  # PostgreSQL Coupon DB (별도)
+  # ============================================================
+  postgres-coupon:
+    image: postgres:16-alpine
+    container_name: findplace-postgres-coupon
+    environment:
+      POSTGRES_DB: findplace_coupon
+      POSTGRES_USER: coupon
+      POSTGRES_PASSWORD: coupon123!
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres-coupon-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - findplace-network
+    healthcheck:
+      test: pg_isready -U coupon -d findplace_coupon
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
   # Redis (Cache & Session)
   # ============================================================
   redis:
@@ -185,6 +208,119 @@ services:
     networks:
       - findplace-network
 
+  # ============================================================
+  # Prometheus (Metrics)
+  # ============================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: findplace-prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+    networks:
+      - findplace-network
+    healthcheck:
+      test: wget -q --spider http://localhost:9090/-/healthy || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # Loki (Log Aggregation)
+  # ============================================================
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: findplace-loki
+    volumes:
+      - ./docker/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - findplace-network
+    healthcheck:
+      test: wget -q --spider http://localhost:3100/ready || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # Promtail (Log Collector)
+  # ============================================================
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: findplace-promtail
+    volumes:
+      - ./docker/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/findplace:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - findplace-network
+
+  # ============================================================
+  # Tempo (Distributed Tracing)
+  # ============================================================
+  tempo:
+    image: grafana/tempo:2.3.1
+    container_name: findplace-tempo
+    volumes:
+      - ./docker/tempo/tempo-config.yml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+    ports:
+      - "3200:3200"   # HTTP
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9411:9411"   # Zipkin
+    command: -config.file=/etc/tempo/tempo.yaml
+    depends_on:
+      - prometheus
+    networks:
+      - findplace-network
+    healthcheck:
+      test: wget -q --spider http://localhost:3200/ready || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # Grafana (Visualization)
+  # ============================================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: findplace-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123!
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3001
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - findplace-network
+    healthcheck:
+      test: wget -q --spider http://localhost:3000/api/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 # ============================================================
 # Networks
 # ============================================================
@@ -199,5 +335,10 @@ volumes:
   postgres-master-data:
   postgres-slave1-data:
   postgres-slave2-data:
+  postgres-coupon-data:
   redis-data:
   minio-data:
+  prometheus-data:
+  loki-data:
+  tempo-data:
+  grafana-data:

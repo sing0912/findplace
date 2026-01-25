@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/companies/**", "/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/funeral-homes/**").permitAll()  // 장례식장 조회는 공개
                         // All other requests require authentication - 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )

@@ -15,7 +15,6 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "axios": "^1.13.2",
@@ -31,9 +30,9 @@
     "zustand": "^5.0.10"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "NODE_OPTIONS=--no-deprecation react-scripts start",
+    "build": "NODE_OPTIONS=--no-deprecation react-scripts build",
+    "test": "NODE_OPTIONS=--no-deprecation react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -53,5 +52,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.58.1",
+    "@types/node": "^25.0.10"
   }
 }

@@ -20,6 +20,8 @@ import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
+import NearbyFuneralHomesPage from './pages/funeralhome/NearbyFuneralHomesPage';
 
 // Components
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -101,6 +103,7 @@ const AppContent: React.FC = () => {
           {/* 공개 라우트 - 인증 없이 접근 가능 */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           {/* 보호된 라우트 - 인증된 사용자만 접근 가능 */}
           <Route
@@ -117,6 +120,7 @@ const AppContent: React.FC = () => {
             <Route path="reservations" element={<div>예약 관리</div>} />
             <Route path="orders" element={<div>주문 내역</div>} />
             <Route path="memorial" element={<div>추모관</div>} />
+            <Route path="nearby" element={<NearbyFuneralHomesPage />} />
 
             {/* 관리자 전용 라우트 */}
             <Route

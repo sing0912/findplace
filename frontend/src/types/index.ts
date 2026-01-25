@@ -11,3 +11,7 @@
 export * from './api';
 export * from './auth';
 export * from './user';
+export * from './region';
+export * from './pet';
+export * from './location';
+export * from './funeralHome';
