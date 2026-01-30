@@ -4,11 +4,14 @@
 # FindPlace 설치 및 실행 스크립트
 #
 # 사용법:
-#   ./setup.sh              # 전체 설치 및 실행
+#   ./setup.sh              # 전체 설치 및 실행 (로컬)
 #   ./setup.sh install      # 필수 소프트웨어 설치만
-#   ./setup.sh start        # 서비스 시작만
+#   ./setup.sh start        # 서비스 시작 (로컬)
+#   ./setup.sh start --prod # 서비스 시작 (프로덕션, SSL 포함)
 #   ./setup.sh stop         # 서비스 중지
 #   ./setup.sh status       # 서비스 상태 확인
+#   ./setup.sh restart      # 서비스 재시작 (로컬)
+#   ./setup.sh restart --prod # 서비스 재시작 (프로덕션)
 #   ./setup.sh clean        # 모든 데이터 삭제 및 초기화
 #===============================================================================
 
@@ -24,8 +27,11 @@ NC='\033[0m' # No Color
 # 프로젝트 루트 디렉토리
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# 프로덕션 모드 플래그
+PROD_MODE=false
+
 # 사용하는 포트 목록
-REQUIRED_PORTS=(80 3000 5432 5433 5434 6379 8080 9000 9001)
+REQUIRED_PORTS=(80 443 3000 5432 5433 5434 6379 8080 9000 9001)
 
 #-------------------------------------------------------------------------------
 # 유틸리티 함수
@@ -256,7 +262,11 @@ install_macos() {
 # 서비스 시작
 #-------------------------------------------------------------------------------
 start_services() {
-    print_header "FindPlace 서비스 시작"
+    if [ "$PROD_MODE" = true ]; then
+        print_header "FindPlace 서비스 시작 (프로덕션 모드)"
+    else
+        print_header "FindPlace 서비스 시작 (로컬 모드)"
+    fi
 
     # 컨테이너 런타임 확인
     COMPOSE_CMD=$(get_compose_command)
@@ -264,6 +274,20 @@ start_services() {
         print_error "Docker 또는 Podman이 설치되어 있지 않습니다"
         print_info "먼저 ./setup.sh install 을 실행하세요"
         exit 1
+    fi
+
+    # 프로덕션 모드 시 SSL 인증서 확인
+    if [ "$PROD_MODE" = true ]; then
+        if [ ! -f "/etc/letsencrypt/live/dev.findplace.co.kr/fullchain.pem" ]; then
+            print_error "SSL 인증서가 없습니다. 먼저 인증서를 발급하세요:"
+            print_info "  certbot certonly --standalone -d dev.findplace.co.kr"
+            exit 1
+        fi
+        if [ ! -f "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf" ]; then
+            print_warning "ssl.conf 파일이 없습니다. 템플릿에서 복사합니다..."
+            cp "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf.prod" "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf"
+        fi
+        print_success "SSL 인증서 확인 완료"
     fi
 
     # 포트 정리
@@ -283,7 +307,11 @@ start_services() {
     # 1. 인프라 서비스 시작
     print_info "인프라 서비스 시작 중..."
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD up -d
+    if [ "$PROD_MODE" = true ]; then
+        $COMPOSE_CMD -f docker-compose.yml -f docker-compose.prod.yml up -d
+    else
+        $COMPOSE_CMD up -d
+    fi
 
     # 인프라 준비 대기
     print_info "인프라 준비 대기 중 (40초)..."
@@ -352,9 +380,15 @@ start_services() {
     # 완료 메시지
     print_header "서비스 시작 완료"
     echo ""
-    echo -e "  ${GREEN}프론트엔드${NC}: http://localhost:3000"
-    echo -e "  ${GREEN}백엔드 API${NC}: http://localhost:8080/api"
-    echo -e "  ${GREEN}Swagger UI${NC}: http://localhost:8080/api/swagger-ui.html"
+    if [ "$PROD_MODE" = true ]; then
+        echo -e "  ${GREEN}프론트엔드${NC}: https://dev.findplace.co.kr"
+        echo -e "  ${GREEN}백엔드 API${NC}: https://dev.findplace.co.kr/api"
+        echo -e "  ${GREEN}Swagger UI${NC}: https://dev.findplace.co.kr/api/swagger-ui.html"
+    else
+        echo -e "  ${GREEN}프론트엔드${NC}: http://localhost:3000"
+        echo -e "  ${GREEN}백엔드 API${NC}: http://localhost:8080/api"
+        echo -e "  ${GREEN}Swagger UI${NC}: http://localhost:8080/api/swagger-ui.html"
+    fi
     echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001 (minioadmin / minioadmin123!)"
     echo ""
     echo -e "  로그 확인:"
@@ -506,7 +540,20 @@ clean_all() {
 # 메인 로직
 #-------------------------------------------------------------------------------
 main() {
-    case "${1:-}" in
+    # --prod 옵션 확인
+    for arg in "$@"; do
+        if [ "$arg" = "--prod" ]; then
+            PROD_MODE=true
+        fi
+    done
+
+    # 첫 번째 인자 (명령어) 추출
+    CMD="${1:-}"
+    if [ "$CMD" = "--prod" ]; then
+        CMD="${2:-}"
+    fi
+
+    case "$CMD" in
         install)
             install_dependencies
             ;;
@@ -532,7 +579,7 @@ main() {
             start_services
             ;;
         *)
-            echo "사용법: $0 {install|start|stop|status|restart|clean|all}"
+            echo "사용법: $0 {install|start|stop|status|restart|clean|all} [--prod]"
             echo ""
             echo "  install  - 필수 소프트웨어 설치"
             echo "  start    - 서비스 시작"
@@ -541,6 +588,14 @@ main() {
             echo "  restart  - 서비스 재시작"
             echo "  clean    - 모든 데이터 삭제 및 초기화"
             echo "  all      - 전체 설치 및 시작 (기본값)"
+            echo ""
+            echo "옵션:"
+            echo "  --prod   - 프로덕션 모드 (SSL/HTTPS 활성화)"
+            echo ""
+            echo "예시:"
+            echo "  $0 start          # 로컬 개발 모드로 시작"
+            echo "  $0 start --prod   # 프로덕션 모드로 시작 (SSL)"
+            echo "  $0 restart --prod # 프로덕션 모드로 재시작"
             exit 1
             ;;
     esac
