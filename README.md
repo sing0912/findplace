@@ -481,71 +481,22 @@ grep -i "error\|exception" /tmp/findplace-backend.log
 
 ## 프로덕션 SSL/HTTPS 설정
 
-### 1. SSL 인증서 발급 (Let's Encrypt)
+프로덕션 환경에서 HTTPS를 사용하려면 SSL 인증서 설정이 필요합니다.
 
 ```bash
-# Rocky Linux / CentOS
-dnf install -y epel-release
-dnf install -y certbot
-
-# nginx 컨테이너 중지 후 인증서 발급
+# 1. SSL 인증서 발급
 docker stop findplace-nginx
 certbot certonly --standalone -d dev.findplace.co.kr -m your@email.com --agree-tos
 docker start findplace-nginx
-```
 
-### 2. SSL 설정 적용
-
-```bash
-# 프로젝트 디렉토리로 이동
-cd /path/to/findplace
-
-# SSL 설정 파일 활성화
+# 2. SSL 설정 적용
 cp docker/nginx/conf.d/ssl.conf.prod docker/nginx/conf.d/ssl.conf
 
-# 프로덕션 모드로 실행
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx
-```
-
-### 3. 인증서 자동 갱신 설정
-
-```bash
-# crontab 편집
-crontab -e
-
-# 아래 내용 추가 (매일 새벽 3시 갱신 시도)
-0 3 * * * certbot renew --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx' >> /var/log/certbot-renew.log 2>&1
-```
-
-### 4. 갱신 테스트
-
-```bash
-# 실제 갱신 없이 테스트
-certbot renew --dry-run --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx'
-
-# 인증서 만료일 확인
-certbot certificates
-```
-
-### 파일 구조
-
-| 파일 | 용도 |
-| --- | --- |
-| `docker/nginx/conf.d/default.conf` | 로컬 개발용 (HTTP only) |
-| `docker/nginx/conf.d/ssl.conf.prod` | SSL 템플릿 |
-| `docker/nginx/conf.d/ssl.conf` | 프로덕션 SSL 설정 (git 제외) |
-| `docker-compose.yml` | 기본 설정 (HTTP) |
-| `docker-compose.prod.yml` | 프로덕션 오버라이드 (HTTPS) |
-
-### 실행 방법
-
-```bash
-# 로컬 개발 (HTTP)
-docker-compose up -d
-
-# 프로덕션 (HTTPS)
+# 3. 프로덕션 모드로 실행
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
+
+자세한 내용은 [실서비스 환경 세팅 가이드](./docs/troubleshooting/production-setup-guide.md#6-sslhttps-설정)를 참조하세요.
 
 ---
 

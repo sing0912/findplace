@@ -9,7 +9,8 @@
 3. [트러블슈팅](#3-트러블슈팅)
 4. [서비스 실행](#4-서비스-실행)
 5. [외부 접속 설정](#5-외부-접속-설정)
-6. [로그 확인](#6-로그-확인)
+6. [SSL/HTTPS 설정](#6-sslhttps-설정)
+7. [로그 확인](#7-로그-확인)
 
 ---
 
@@ -326,7 +327,86 @@ nohup npm start > /tmp/findplace-frontend.log 2>&1 &
 
 ---
 
-## 6. 로그 확인
+## 6. SSL/HTTPS 설정
+
+### 6.1 SSL 인증서 발급 (Let's Encrypt)
+
+```bash
+# Rocky Linux / CentOS
+dnf install -y epel-release
+dnf install -y certbot
+
+# nginx 컨테이너 중지 후 인증서 발급 (80 포트 사용)
+docker stop findplace-nginx
+certbot certonly --standalone -d dev.findplace.co.kr -m your@email.com --agree-tos
+docker start findplace-nginx
+```
+
+### 6.2 SSL 설정 적용
+
+```bash
+# 프로젝트 디렉토리로 이동
+cd /home/findplace
+
+# SSL 설정 파일 활성화 (템플릿 복사)
+cp docker/nginx/conf.d/ssl.conf.prod docker/nginx/conf.d/ssl.conf
+
+# 프로덕션 모드로 nginx 재시작
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx
+```
+
+### 6.3 인증서 자동 갱신 설정
+
+Let's Encrypt 인증서는 90일 후 만료되므로 자동 갱신 설정 필요.
+
+```bash
+# crontab 편집
+crontab -e
+
+# 아래 내용 추가 (매일 새벽 3시 갱신 시도)
+0 3 * * * certbot renew --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx' >> /var/log/certbot-renew.log 2>&1
+```
+
+### 6.4 갱신 테스트
+
+```bash
+# 실제 갱신 없이 테스트 (dry-run)
+certbot renew --dry-run --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx'
+
+# 인증서 만료일 확인
+certbot certificates
+```
+
+### 6.5 SSL 관련 파일 구조
+
+| 파일 | 용도 |
+|------|------|
+| `docker/nginx/conf.d/default.conf` | 로컬 개발용 (HTTP only) |
+| `docker/nginx/conf.d/ssl.conf.prod` | SSL 설정 템플릿 |
+| `docker/nginx/conf.d/ssl.conf` | 프로덕션 SSL 설정 (git 제외) |
+| `docker-compose.yml` | 기본 설정 (HTTP, 80 포트) |
+| `docker-compose.prod.yml` | 프로덕션 오버라이드 (HTTPS, 443 포트) |
+
+### 6.6 실행 방법
+
+```bash
+# 로컬 개발 (HTTP only)
+docker-compose up -d
+
+# 프로덕션 (HTTPS)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### 6.7 방화벽 443 포트 열기
+
+```bash
+firewall-cmd --permanent --add-port=443/tcp
+firewall-cmd --reload
+```
+
+---
+
+## 7. 로그 확인
 
 ### 백엔드 로그
 ```bash
@@ -375,10 +455,18 @@ docker logs findplace-minio
 - [ ] Git 설치됨
 - [ ] Docker 설치 및 실행 중
 - [ ] docker-compose 설치됨
-- [ ] 포트 80, 3000, 8080, 9000, 9001 사용 가능
+- [ ] 포트 80, 443, 3000, 8080, 9000, 9001 사용 가능
 - [ ] 방화벽 포트 열림
 - [ ] gradle-wrapper.jar 존재
 - [ ] frontend/.env 파일 생성됨
+
+SSL 설정 확인 사항:
+
+- [ ] certbot 설치됨
+- [ ] SSL 인증서 발급됨 (`certbot certificates`로 확인)
+- [ ] ssl.conf 파일 생성됨 (`cp ssl.conf.prod ssl.conf`)
+- [ ] 443 포트 방화벽 열림
+- [ ] 자동 갱신 crontab 설정됨
 
 ---
 
