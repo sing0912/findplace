@@ -66,6 +66,9 @@ docker/postgres/data/
 docker/redis/data/
 docker/minio/data/
 
+# Nginx SSL 설정 (프로덕션에서만 활성화)
+docker/nginx/conf.d/ssl.conf
+
 # ========================
 # Test
 # ========================
