@@ -184,6 +184,13 @@ findplace/
 | --- | --- | --- |
 | auth | ✅ 완료 | 회원가입, 로그인, JWT 발급/갱신 |
 | user | ✅ 완료 | 사용자 조회, 프로필 수정 |
+| region | ✅ 완료 | 지역/시도 관리, 행정구역 코드 |
+| pet | ✅ 완료 | 반려동물 CRUD |
+| funeralhome | ✅ 완료 | 장례식장 조회, 근처 장례식장 검색 |
+| coupon | ✅ 완료 | 쿠폰 관리 |
+| admin | ✅ 완료 | 관리자 사용자 관리 |
+| batch | ✅ 완료 | 배치 작업 (데이터 동기화) |
+| location | ✅ 완료 | 위치 기반 서비스, 거리 계산 |
 | company | ⬜ 미구현 | 장례업체 CRUD |
 | supplier | ⬜ 미구현 | 공급사 CRUD |
 | product | ⬜ 미구현 | 상품 CRUD |
@@ -204,6 +211,9 @@ findplace/
 | 로그인 | ✅ 완료 | /login |
 | 회원가입 | ✅ 완료 | /register |
 | 홈 (대시보드) | ✅ 완료 | / |
+| 근처 장례식장 | ✅ 완료 | /nearby-funeral-homes |
+| 반려동물 목록 | ✅ 완료 | /pets |
+| 개인정보처리방침 | ✅ 완료 | /privacy-policy |
 | 장례업체 목록 | ⬜ 미구현 | /companies |
 | 상품 목록 | ⬜ 미구현 | /products |
 | 예약 관리 | ⬜ 미구현 | /reservations |

@@ -11,3 +11,6 @@
 export { default as apiClient } from './client';
 export * from './auth';
 export * from './user';
+export * from './funeralHome';
+export * from './pet';
+export * from './region';
