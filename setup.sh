@@ -283,10 +283,8 @@ start_services() {
             print_info "  certbot certonly --standalone -d dev.findplace.co.kr"
             exit 1
         fi
-        if [ ! -f "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf" ]; then
-            print_warning "ssl.conf 파일이 없습니다. 템플릿에서 복사합니다..."
-            cp "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf.prod" "$PROJECT_ROOT/docker/nginx/conf.d/ssl.conf"
-        fi
+        # certbot 갱신용 디렉토리 생성
+        sudo mkdir -p /var/www/certbot
         print_success "SSL 인증서 확인 완료"
     fi
 
