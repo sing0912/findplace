@@ -273,17 +273,24 @@ systemctl stop firewalld
 ### setup.sh 사용
 
 ```bash
-# 전체 설치 및 실행
+# 전체 설치 및 실행 (로컬 개발)
 ./setup.sh
 
-# 개별 명령
+# 개별 명령 (로컬 개발)
 ./setup.sh install   # 필수 소프트웨어 설치
-./setup.sh start     # 서비스 시작
+./setup.sh start     # 서비스 시작 (HTTP)
 ./setup.sh stop      # 서비스 중지
 ./setup.sh status    # 상태 확인
 ./setup.sh restart   # 재시작
 ./setup.sh clean     # 전체 초기화
+
+# 프로덕션 모드 (SSL/HTTPS)
+./setup.sh start --prod     # 프로덕션 모드로 시작
+./setup.sh restart --prod   # 프로덕션 모드로 재시작
 ```
+
+> **참고:** 프로덕션 모드(`--prod`)는 SSL 인증서가 발급된 후 사용하세요.
+> 인증서 발급 방법은 [6. SSL/HTTPS 설정](#6-sslhttps-설정)을 참조하세요.
 
 ### 수동 실행
 
