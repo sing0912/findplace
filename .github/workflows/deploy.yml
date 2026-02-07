@@ -71,7 +71,7 @@ jobs:
         env:
           REACT_APP_GOOGLE_CLIENT_ID: ${{ vars.REACT_APP_GOOGLE_CLIENT_ID }}
         run: |
-          npm ci
+          npm install
           npm run build
           tar -czf ../frontend.tar.gz -C build .
 
