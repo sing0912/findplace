@@ -155,33 +155,75 @@ Closes #123
 
 ## 환경 설정
 
-### 환경 변수
+### .env 파일 기반 관리
 
+모든 환경 변수는 프로젝트 루트의 `.env` 파일로 관리합니다.
+**비밀번호, 시크릿 등 민감 정보는 코드/설정 파일에 하드코딩 금지.**
+
+```bash
+# 최초 설정
+cp .env.example .env
+# .env 파일의 your-* 값을 실제 값으로 변경
 ```
-# Database
-DB_MASTER_HOST=localhost
-DB_MASTER_PORT=5432
-DB_SLAVE1_HOST=localhost
-DB_SLAVE1_PORT=5433
-DB_SLAVE2_HOST=localhost
-DB_SLAVE2_PORT=5434
-DB_NAME=petpro
-DB_USERNAME=petpro
-DB_PASSWORD=your-secure-password
 
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
+| 파일 | 용도 | Git 추적 |
+|------|------|----------|
+| `.env.example` | 환경 변수 템플릿 (플레이스홀더) | O |
+| `.env` | 실제 값 (민감 정보 포함) | X (.gitignore) |
+| `frontend/.env` | 프론트엔드 환경 변수 (setup.sh가 자동 생성) | X (.gitignore) |
 
-# MinIO
-MINIO_ENDPOINT=http://localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=your-minio-secret-key
+### 필수 환경 변수
 
-# JWT
-JWT_SECRET=your-jwt-secret-key-at-least-256-bits
-JWT_EXPIRATION=3600
+| 변수명 | 설명 | 필수 |
+|--------|------|------|
+| `DB_PASSWORD` | PostgreSQL 비밀번호 | **필수** |
+| `REDIS_PASSWORD` | Redis 비밀번호 | **필수** |
+| `MINIO_SECRET_KEY` | MinIO 시크릿 키 | **필수** |
+| `JWT_SECRET` | JWT 서명 키 (256bit+) | **필수** |
+| `REPLICATOR_PASSWORD` | PG 복제 비밀번호 | **필수** |
+| `COUPON_DB_PASSWORD` | 쿠폰 DB 비밀번호 | **필수** |
+| `LOG_DB_PASSWORD` | 로그 DB 비밀번호 | **필수** |
+| `LOG_DB_ROOT_PASSWORD` | 로그 DB root 비밀번호 | **필수** |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana 관리자 비밀번호 | **필수** |
+| `GOOGLE_MAPS_API_KEY` | Google Maps API 키 | 선택 |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | 선택 |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Secret | 선택 |
+
+전체 목록: `.env.example` 참조
+
+### setup.sh 통합 셋업
+
+서버에서 `git pull` 후 한 번에 전체 환경을 구성합니다.
+
+```bash
+# 전체 설치 + 시작 (최초)
+./setup.sh
+
+# 서비스 시작 (로컬)
+./setup.sh start
+
+# 서비스 시작 (프로덕션)
+./setup.sh start --prod
+
+# 서비스 재시작
+./setup.sh restart
+
+# 상태 확인
+./setup.sh status
+
+# 서비스 중지
+./setup.sh stop
 ```
+
+**setup.sh 동작 순서:**
+
+1. `.env` 파일 존재 확인 (없으면 `.env.example`에서 복사 후 안내)
+2. 환경 변수 로드 및 필수 변수 검증
+3. `frontend/.env` 자동 생성 (root `.env`의 OAuth 키 반영)
+4. Docker/Podman 인프라 시작 (`.env` 자동 참조)
+5. 백엔드 빌드 및 시작 (환경 변수 export)
+6. 프론트엔드 설치 및 시작
+7. 인프라 상태 확인
 
 ---
 

@@ -3,7 +3,7 @@
  * @see docs/develop/user/frontend.md - 섹션 3.3
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Container, CircularProgress, Typography } from '@mui/material';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,32 +15,33 @@ const OAuthCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const isProcessing = useRef(false); // 중복 요청 방지
   const { login } = useAuthStore();
 
   useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const errorParam = searchParams.get('error');
+
+    if (errorParam) {
+      setError('로그인이 취소되었습니다.');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
+    if (!code) {
+      setError('인증 코드를 받지 못했습니다.');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
+    // StrictMode 이중 렌더링 방지: sessionStorage로 코드 중복 처리 차단
+    const processedKey = `oauth_processed_${code}`;
+    if (sessionStorage.getItem(processedKey)) {
+      return;
+    }
+    sessionStorage.setItem(processedKey, '1');
+
     const handleCallback = async () => {
-      // 이미 처리 중이면 무시
-      if (isProcessing.current) {
-        return;
-      }
-      isProcessing.current = true;
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-      const errorParam = searchParams.get('error');
-
-      if (errorParam) {
-        setError('로그인이 취소되었습니다.');
-        setTimeout(() => navigate('/login'), 2000);
-        return;
-      }
-
-      if (!code) {
-        setError('인증 코드를 받지 못했습니다.');
-        setTimeout(() => navigate('/login'), 2000);
-        return;
-      }
-
       try {
         const response = await fetch(`/api/v1/auth/oauth/${provider}/callback`, {
           method: 'POST',
@@ -50,13 +51,9 @@ const OAuthCallbackPage: React.FC = () => {
           body: JSON.stringify({ code, state }),
         });
 
-        if (!response.ok) {
-          throw new Error('인증에 실패했습니다.');
-        }
-
         const response_data = await response.json();
 
-        if (!response_data.success) {
+        if (!response.ok || !response_data.success) {
           throw new Error(response_data.error?.message || '인증에 실패했습니다.');
         }
 
@@ -82,14 +79,14 @@ const OAuthCallbackPage: React.FC = () => {
         // OAuth 로그인은 이미 사용자가 생성되므로 바로 마이페이지로 이동
         navigate('/mypage');
       } catch (err) {
-        isProcessing.current = false; // 에러 시 재시도 가능하도록
+        sessionStorage.removeItem(processedKey); // 에러 시 재시도 가능
         setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         setTimeout(() => navigate('/login'), 2000);
       }
     };
 
     handleCallback();
-  }, [provider, searchParams, navigate]);
+  }, [provider, searchParams, navigate, login]);
 
   return (
     <Container maxWidth="sm">

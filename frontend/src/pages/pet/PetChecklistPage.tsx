@@ -3,7 +3,7 @@
  * @see docs/develop/pet/frontend.md - U-PET-004
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -22,10 +22,12 @@ const PetChecklistPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const petId = id ? Number(id) : null;
-  const { checklist, loading: checklistLoading, notFound } = usePetChecklist(petId);
+
+  // 백엔드 체크리스트 API가 구현되면 enabled: true로 변경
+  const [fetchEnabled] = useState(false);
+  const { checklist, loading: checklistLoading, notFound } = usePetChecklist(petId, { enabled: fetchEnabled });
   const {
-    createChecklist,
-    updateChecklist,
+    saveChecklist,
     loading: mutationLoading,
     error: mutationError,
   } = usePetChecklistMutations();
@@ -37,12 +39,12 @@ const PetChecklistPage: React.FC = () => {
   ) => {
     if (!petId) return;
 
-    if (isEditMode) {
-      await updateChecklist(petId, data as UpdatePetChecklistRequest);
-    } else {
-      await createChecklist(petId, data as CreatePetChecklistRequest);
+    try {
+      await saveChecklist(petId, data as CreatePetChecklistRequest, isEditMode);
+      navigate(`/mypage/pets/${petId}/edit`);
+    } catch {
+      // 에러는 훅에서 처리
     }
-    navigate(`/mypage/pets/${petId}/edit`);
   };
 
   if (checklistLoading) {

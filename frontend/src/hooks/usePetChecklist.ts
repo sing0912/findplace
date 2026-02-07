@@ -11,6 +11,10 @@ import {
   UpdatePetChecklistRequest,
 } from '../types/petChecklist';
 
+interface UsePetChecklistOptions {
+  enabled?: boolean;
+}
+
 interface UsePetChecklistResult {
   checklist: PetChecklist | null;
   loading: boolean;
@@ -21,8 +25,14 @@ interface UsePetChecklistResult {
 
 /**
  * 반려동물 성향 체크리스트 조회 훅
+ * @param petId - 반려동물 ID
+ * @param options.enabled - false이면 자동 fetch 비활성화 (기본값: true)
  */
-export const usePetChecklist = (petId: number | null): UsePetChecklistResult => {
+export const usePetChecklist = (
+  petId: number | null,
+  options: UsePetChecklistOptions = {}
+): UsePetChecklistResult => {
+  const { enabled = true } = options;
   const [checklist, setChecklist] = useState<PetChecklist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,31 +63,35 @@ export const usePetChecklist = (petId: number | null): UsePetChecklistResult => 
   }, [petId]);
 
   useEffect(() => {
-    fetchChecklist();
-  }, [fetchChecklist]);
+    if (enabled) {
+      fetchChecklist();
+    }
+  }, [fetchChecklist, enabled]);
 
   return { checklist, loading, error, notFound, refetch: fetchChecklist };
 };
 
 interface UsePetChecklistMutationsResult {
-  createChecklist: (petId: number, request: CreatePetChecklistRequest) => Promise<PetChecklist>;
-  updateChecklist: (petId: number, request: UpdatePetChecklistRequest) => Promise<PetChecklist>;
+  saveChecklist: (petId: number, request: CreatePetChecklistRequest, isUpdate: boolean) => Promise<PetChecklist>;
   loading: boolean;
   error: string | null;
 }
 
 /**
- * 성향 체크리스트 생성/수정 훅
+ * 성향 체크리스트 저장 훅 (생성/수정 통합)
  */
 export const usePetChecklistMutations = (): UsePetChecklistMutationsResult => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCreate = useCallback(
-    async (petId: number, request: CreatePetChecklistRequest): Promise<PetChecklist> => {
+  const handleSave = useCallback(
+    async (petId: number, request: CreatePetChecklistRequest, isUpdate: boolean): Promise<PetChecklist> => {
       setLoading(true);
       setError(null);
       try {
+        if (isUpdate) {
+          return await updateChecklist(petId, request as UpdatePetChecklistRequest);
+        }
         return await createChecklist(petId, request);
       } catch (err) {
         setError('성향 체크리스트 저장에 실패했습니다.');
@@ -89,25 +103,8 @@ export const usePetChecklistMutations = (): UsePetChecklistMutationsResult => {
     []
   );
 
-  const handleUpdate = useCallback(
-    async (petId: number, request: UpdatePetChecklistRequest): Promise<PetChecklist> => {
-      setLoading(true);
-      setError(null);
-      try {
-        return await updateChecklist(petId, request);
-      } catch (err) {
-        setError('성향 체크리스트 수정에 실패했습니다.');
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
   return {
-    createChecklist: handleCreate,
-    updateChecklist: handleUpdate,
+    saveChecklist: handleSave,
     loading,
     error,
   };
