@@ -1,0 +1,35 @@
+# E2E 테스트용 PostgreSQL 프로필
+# 사용법: -De2e.profiles=test,test-pg
+# test 프로필의 설정을 상속받고, 메인 DataSource만 PostgreSQL로 변경
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/petpro
+    username: petpro
+    password: petpro123!
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+
+  flyway:
+    enabled: false
+
+datasource:
+  master:
+    jdbc-url: jdbc:postgresql://localhost:5432/petpro
+    username: petpro
+    password: petpro123!
+    driver-class-name: org.postgresql.Driver
+  slave:
+    nodes:
+      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
+        username: petpro
+        password: petpro123!
+        driver-class-name: org.postgresql.Driver
+      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
+        username: petpro
+        password: petpro123!
+        driver-class-name: org.postgresql.Driver
+
+# 쿠폰/로그 DB는 H2 유지 (test 프로필 설정 그대로 사용)

@@ -3,3 +3,4 @@
  */
 
 export { default as PrivacyPolicyContent } from './PrivacyPolicyContent';
+export { default as TermsOfUseContent } from './TermsOfUseContent';

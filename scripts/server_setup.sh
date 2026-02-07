@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# FindPlace - 서버 설정 자동화 스크립트
+# PetPro - 서버 설정 자동화 스크립트
 # 사용법: ./scripts/server_setup.sh <도메인> <이메일>
 # 예시: ./scripts/server_setup.sh dev.findplace.co.kr admin@findplace.co.kr
 # ============================================================
@@ -29,7 +29,7 @@ DOMAIN="$1"
 EMAIL="$2"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}   FindPlace 서버 설정${NC}"
+echo -e "${BLUE}   PetPro 서버 설정${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 echo -e "도메인: ${GREEN}$DOMAIN${NC}"
@@ -121,7 +121,7 @@ docker-compose up -d nginx
 sleep 3
 
 # Nginx 상태 확인
-if ! docker ps | grep -q findplace-nginx; then
+if ! docker ps | grep -q petpro-nginx; then
     echo -e "${RED}Nginx 시작 실패. 로그 확인:${NC}"
     docker-compose logs --tail=20 nginx
     exit 1
@@ -263,7 +263,7 @@ docker-compose up -d nginx
 
 # 최종 확인
 sleep 3
-if docker ps | grep -q findplace-nginx; then
+if docker ps | grep -q petpro-nginx; then
     echo ""
     echo -e "${GREEN}========================================${NC}"
     echo -e "${GREEN}   설정 완료!${NC}"

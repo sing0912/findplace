@@ -56,7 +56,7 @@
 ### MinIO (S3 호환)
 
 ```
-findplace-bucket/
+petpro-bucket/
 ├── profiles/
 │   └── {userId}/
 │       └── {filename}

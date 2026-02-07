@@ -90,7 +90,7 @@
   "zipCode": "06141",
   "latitude": 37.5065,
   "longitude": 127.0536,
-  "profileImageUrl": "https://storage.findplace.com/profiles/1.jpg",
+  "profileImageUrl": "https://storage.petpro.com/profiles/1.jpg",
   "createdAt": "2025-01-20T14:30:00"
 }
 ```

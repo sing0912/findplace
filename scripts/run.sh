@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# FindPlace 통합 실행 스크립트
+# PetPro 통합 실행 스크립트
 # Docker / Podman 자동 호환
 # ============================================================
 
@@ -30,7 +30,7 @@ COMPOSE_RT=""
 print_banner() {
     echo -e "${BLUE}"
     echo "╔═══════════════════════════════════════════════════════════╗"
-    echo "║           FindPlace - 반려동물 장례 토탈 플랫폼           ║"
+    echo "║           PetPro - 반려동물 장례 토탈 플랫폼           ║"
     echo "╚═══════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
@@ -97,7 +97,7 @@ run_container() {
 # ============================================================
 
 cmd_init() {
-    print_info "FindPlace 초기화 중..."
+    print_info "PetPro 초기화 중..."
 
     # 스크립트 실행 권한
     chmod +x "$SCRIPT_DIR"/*.sh
@@ -181,21 +181,21 @@ cmd_clean() {
 
 cmd_db_shell() {
     local target=${1:-master}
-    local container_name="findplace-postgres-$target"
+    local container_name="petpro-postgres-$target"
 
     print_info "PostgreSQL ($target) 접속 중..."
-    run_container exec -it "$container_name" psql -U findplace -d findplace
+    run_container exec -it "$container_name" psql -U petpro -d petpro
 }
 
 cmd_redis_shell() {
     print_info "Redis 접속 중..."
-    run_container exec -it findplace-redis redis-cli -a redis123!
+    run_container exec -it petpro-redis redis-cli -a redis123!
 }
 
 cmd_replication_status() {
     print_info "Replication 상태 확인 중..."
-    run_container exec -it findplace-postgres-master \
-        psql -U findplace -d findplace -c "SELECT * FROM pg_stat_replication;"
+    run_container exec -it petpro-postgres-master \
+        psql -U petpro -d petpro -c "SELECT * FROM pg_stat_replication;"
 }
 
 cmd_backend() {
@@ -274,8 +274,8 @@ cmd_status() {
 
     echo ""
     print_info "=== Replication 상태 ==="
-    run_container exec findplace-postgres-master \
-        psql -U findplace -d findplace -c "SELECT client_addr, state, sent_lsn, write_lsn FROM pg_stat_replication;" 2>/dev/null || \
+    run_container exec petpro-postgres-master \
+        psql -U petpro -d petpro -c "SELECT client_addr, state, sent_lsn, write_lsn FROM pg_stat_replication;" 2>/dev/null || \
         print_warning "PostgreSQL Master가 실행 중이 아닙니다."
 }
 

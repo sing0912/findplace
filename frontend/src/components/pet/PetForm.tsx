@@ -1,8 +1,26 @@
 /**
- * @fileoverview 반려동물 등록/수정 폼 컴포넌트
+ * @fileoverview 반려동물 등록/수정 폼 컴포넌트 (MUI)
+ * @see docs/develop/pet/frontend.md
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Checkbox,
+  Avatar,
+  IconButton,
+  Typography,
+  Alert,
+} from '@mui/material';
+import { PhotoCamera } from '@mui/icons-material';
 import {
   Species,
   Gender,
@@ -12,33 +30,40 @@ import {
   UpdatePetRequest,
   Pet,
 } from '../../types/pet';
+import { AuthButton } from '../auth';
 
 interface PetFormProps {
-  /** 수정 모드일 경우 기존 반려동물 정보 */
   pet?: Pet | null;
-  /** 제출 핸들러 */
   onSubmit: (data: CreatePetRequest | UpdatePetRequest) => Promise<void>;
-  /** 취소 핸들러 */
   onCancel: () => void;
-  /** 이미지 업로드 핸들러 */
   onImageUpload?: (file: File) => Promise<void>;
-  /** 로딩 상태 */
+  onSuccess?: () => void;
   loading?: boolean;
 }
 
 const SPECIES_OPTIONS: Species[] = ['DOG', 'CAT', 'BIRD', 'HAMSTER', 'RABBIT', 'FISH', 'REPTILE', 'ETC'];
 const GENDER_OPTIONS: Gender[] = ['MALE', 'FEMALE', 'UNKNOWN'];
 
-/**
- * 반려동물 등록/수정 폼 컴포넌트
- */
+const SPECIES_ICONS: Record<string, string> = {
+  DOG: '\uD83D\uDC15',
+  CAT: '\uD83D\uDC08',
+  BIRD: '\uD83D\uDC26',
+  HAMSTER: '\uD83D\uDC39',
+  RABBIT: '\uD83D\uDC30',
+  FISH: '\uD83D\uDC1F',
+  REPTILE: '\uD83E\uDD8E',
+  ETC: '\uD83D\uDC3E',
+};
+
 const PetForm: React.FC<PetFormProps> = ({
   pet,
   onSubmit,
   onCancel,
   onImageUpload,
+  onSuccess,
   loading = false,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     species: 'DOG',
@@ -53,7 +78,6 @@ const PetForm: React.FC<PetFormProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // 수정 모드일 경우 기존 데이터 로드
   useEffect(() => {
     if (pet) {
       setFormData({
@@ -71,41 +95,30 @@ const PetForm: React.FC<PetFormProps> = ({
     }
   }, [pet]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-
-    // 에러 클리어
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // 파일 유효성 검사
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        setErrors((prev) => ({ ...prev, image: '지원하지 않는 파일 형식입니다.' }));
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, image: '파일 크기는 5MB 이하여야 합니다.' }));
-        return;
-      }
+    if (!file) return;
 
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setErrors((prev) => ({ ...prev, image: '' }));
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, image: '지원하지 않는 파일 형식입니다.' }));
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, image: '파일 크기는 5MB 이하여야 합니다.' }));
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setErrors((prev) => ({ ...prev, image: '' }));
   };
 
   const validate = (): boolean => {
@@ -126,7 +139,7 @@ const PetForm: React.FC<PetFormProps> = ({
     }
 
     if (formData.memo && formData.memo.length > 1000) {
-      newErrors.memo = '메모는 1000자 이하여야 합니다.';
+      newErrors.memo = '특이사항은 1000자 이하여야 합니다.';
     }
 
     setErrors(newErrors);
@@ -135,177 +148,202 @@ const PetForm: React.FC<PetFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
+    if (!validate()) return;
 
     try {
       await onSubmit(formData);
-
-      // 이미지 업로드 (수정 모드이고 새 이미지가 있는 경우)
       if (imageFile && onImageUpload) {
         await onImageUpload(imageFile);
       }
-    } catch (err) {
+      onSuccess?.();
+    } catch {
       // 에러는 상위 컴포넌트에서 처리
     }
   };
 
+  const speciesIcon = SPECIES_ICONS[formData.species] || '\uD83D\uDC3E';
+
   return (
-    <form className="pet-form" onSubmit={handleSubmit}>
+    <Box component="form" onSubmit={handleSubmit}>
       {/* 프로필 이미지 */}
-      <div className="pet-form__field">
-        <label className="pet-form__label">프로필 이미지</label>
-        <div className="pet-form__image-upload">
-          {imagePreview && (
-            <img src={imagePreview} alt="미리보기" className="pet-form__image-preview" />
-          )}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+        <Box sx={{ position: 'relative' }}>
+          <Avatar
+            src={imagePreview || undefined}
+            alt="프로필"
+            sx={{
+              width: 80,
+              height: 80,
+              backgroundColor: '#76BCA2',
+              fontSize: '36px',
+            }}
+          >
+            {speciesIcon}
+          </Avatar>
+          <IconButton
+            size="small"
+            onClick={() => fileInputRef.current?.click()}
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              right: -4,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E0E0E0',
+              width: 28,
+              height: 28,
+              '&:hover': { backgroundColor: '#F5F5F5' },
+            }}
+          >
+            <PhotoCamera sx={{ fontSize: 16, color: '#404040' }} />
+          </IconButton>
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/gif,image/webp"
             onChange={handleImageChange}
-            className="pet-form__file-input"
+            style={{ display: 'none' }}
           />
-        </div>
-        {errors.image && <span className="pet-form__error">{errors.image}</span>}
-      </div>
+        </Box>
+      </Box>
+      {errors.image && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errors.image}
+        </Alert>
+      )}
 
       {/* 이름 */}
-      <div className="pet-form__field">
-        <label htmlFor="name" className="pet-form__label">
-          이름 <span className="pet-form__required">*</span>
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="반려동물 이름"
-          className="pet-form__input"
-          maxLength={100}
-        />
-        {errors.name && <span className="pet-form__error">{errors.name}</span>}
-      </div>
+      <TextField
+        fullWidth
+        label="이름"
+        value={formData.name}
+        onChange={(e) => handleChange('name', e.target.value)}
+        error={!!errors.name}
+        helperText={errors.name}
+        required
+        inputProps={{ maxLength: 100 }}
+        sx={{ mb: 2 }}
+        size="small"
+      />
 
       {/* 종류 */}
-      <div className="pet-form__field">
-        <label htmlFor="species" className="pet-form__label">
-          종류 <span className="pet-form__required">*</span>
-        </label>
-        <select
-          id="species"
-          name="species"
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <InputLabel>종류 *</InputLabel>
+        <Select
           value={formData.species}
-          onChange={handleChange}
-          className="pet-form__select"
+          label="종류 *"
+          onChange={(e) => handleChange('species', e.target.value)}
         >
           {SPECIES_OPTIONS.map((species) => (
-            <option key={species} value={species}>
+            <MenuItem key={species} value={species}>
               {SPECIES_NAMES[species]}
-            </option>
+            </MenuItem>
           ))}
-        </select>
-        {errors.species && <span className="pet-form__error">{errors.species}</span>}
-      </div>
+        </Select>
+      </FormControl>
 
       {/* 품종 */}
-      <div className="pet-form__field">
-        <label htmlFor="breed" className="pet-form__label">
-          품종
-        </label>
-        <input
-          type="text"
-          id="breed"
-          name="breed"
-          value={formData.breed}
-          onChange={handleChange}
-          placeholder="품종 (예: 말티즈)"
-          className="pet-form__input"
-          maxLength={100}
-        />
-        {errors.breed && <span className="pet-form__error">{errors.breed}</span>}
-      </div>
+      <TextField
+        fullWidth
+        label="품종"
+        value={formData.breed}
+        onChange={(e) => handleChange('breed', e.target.value)}
+        error={!!errors.breed}
+        helperText={errors.breed}
+        placeholder="예: 말티즈"
+        inputProps={{ maxLength: 100 }}
+        sx={{ mb: 2 }}
+        size="small"
+      />
 
       {/* 생년월일 */}
-      <div className="pet-form__field">
-        <label htmlFor="birthDate" className="pet-form__label">
-          생년월일
-        </label>
-        <input
-          type="date"
-          id="birthDate"
-          name="birthDate"
-          value={formData.birthDate}
-          onChange={handleChange}
-          max={new Date().toISOString().split('T')[0]}
-          className="pet-form__input"
-        />
-      </div>
+      <TextField
+        fullWidth
+        label="생년월일"
+        type="date"
+        value={formData.birthDate}
+        onChange={(e) => handleChange('birthDate', e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        inputProps={{ max: new Date().toISOString().split('T')[0] }}
+        sx={{ mb: 2 }}
+        size="small"
+      />
 
       {/* 성별 */}
-      <div className="pet-form__field">
-        <label className="pet-form__label">성별</label>
-        <div className="pet-form__radio-group">
+      <Box sx={{ mb: 2 }}>
+        <Typography
+          sx={{
+            fontFamily: 'Noto Sans KR, sans-serif',
+            fontSize: '13px',
+            color: '#404040',
+            mb: 1,
+          }}
+        >
+          성별
+        </Typography>
+        <RadioGroup
+          row
+          value={formData.gender || ''}
+          onChange={(e) => handleChange('gender', e.target.value || undefined)}
+        >
           {GENDER_OPTIONS.map((gender) => (
-            <label key={gender} className="pet-form__radio-label">
-              <input
-                type="radio"
-                name="gender"
-                value={gender}
-                checked={formData.gender === gender}
-                onChange={handleChange}
-                className="pet-form__radio"
-              />
-              {GENDER_NAMES[gender]}
-            </label>
+            <FormControlLabel
+              key={gender}
+              value={gender}
+              control={<Radio size="small" sx={{ color: '#AEAEAE', '&.Mui-checked': { color: '#76BCA2' } }} />}
+              label={
+                <Typography sx={{ fontSize: '14px', fontFamily: 'Noto Sans KR, sans-serif' }}>
+                  {GENDER_NAMES[gender]}
+                </Typography>
+              }
+            />
           ))}
-        </div>
-      </div>
+        </RadioGroup>
+      </Box>
 
       {/* 중성화 */}
-      <div className="pet-form__field">
-        <label className="pet-form__checkbox-label">
-          <input
-            type="checkbox"
-            name="isNeutered"
+      <FormControlLabel
+        control={
+          <Checkbox
             checked={formData.isNeutered}
-            onChange={handleChange}
-            className="pet-form__checkbox"
+            onChange={(e) => handleChange('isNeutered', e.target.checked)}
+            size="small"
+            sx={{ color: '#AEAEAE', '&.Mui-checked': { color: '#76BCA2' } }}
           />
-          중성화 완료
-        </label>
-      </div>
+        }
+        label={
+          <Typography sx={{ fontSize: '14px', fontFamily: 'Noto Sans KR, sans-serif' }}>
+            중성화 완료
+          </Typography>
+        }
+        sx={{ mb: 2 }}
+      />
 
-      {/* 메모 */}
-      <div className="pet-form__field">
-        <label htmlFor="memo" className="pet-form__label">
-          특이사항
-        </label>
-        <textarea
-          id="memo"
-          name="memo"
-          value={formData.memo}
-          onChange={handleChange}
-          placeholder="특이사항을 입력해주세요"
-          className="pet-form__textarea"
-          maxLength={1000}
-          rows={3}
-        />
-        {errors.memo && <span className="pet-form__error">{errors.memo}</span>}
-      </div>
+      {/* 특이사항 */}
+      <TextField
+        fullWidth
+        label="특이사항"
+        value={formData.memo}
+        onChange={(e) => handleChange('memo', e.target.value)}
+        error={!!errors.memo}
+        helperText={errors.memo}
+        placeholder="특이사항을 입력해주세요"
+        multiline
+        rows={3}
+        inputProps={{ maxLength: 1000 }}
+        sx={{ mb: 3 }}
+        size="small"
+      />
 
       {/* 버튼 */}
-      <div className="pet-form__actions">
-        <button type="button" onClick={onCancel} className="pet-form__btn pet-form__btn--cancel">
+      <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <AuthButton variant="secondary" fullWidth onClick={onCancel}>
           취소
-        </button>
-        <button type="submit" disabled={loading} className="pet-form__btn pet-form__btn--submit">
-          {loading ? '처리 중...' : pet ? '수정' : '등록'}
-        </button>
-      </div>
-    </form>
+        </AuthButton>
+        <AuthButton variant="primary" fullWidth type="submit" loading={loading}>
+          {pet ? '수정' : '등록'}
+        </AuthButton>
+      </Box>
+    </Box>
   );
 };
 

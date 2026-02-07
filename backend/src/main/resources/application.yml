@@ -1,6 +1,6 @@
 spring:
   application:
-    name: findplace-backend
+    name: petpro-backend
 
   profiles:
     active: ${APP_ENV:local}
@@ -62,7 +62,7 @@ server:
 # Custom Application Properties
 app:
   jwt:
-    secret: ${JWT_SECRET:your-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+    secret: ${JWT_SECRET}
     access-expiration: ${JWT_ACCESS_EXPIRATION:3600}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:1209600}
 
@@ -73,7 +73,27 @@ app:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin123!}
-    bucket: ${MINIO_BUCKET:findplace}
+    bucket: ${MINIO_BUCKET:petpro}
+
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/oauth/google/callback}
+      token-uri: https://oauth2.googleapis.com/token
+      user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:}
+      client-secret: ${KAKAO_CLIENT_SECRET:}
+      redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:3000/oauth/kakao/callback}
+      token-uri: https://kauth.kakao.com/oauth/token
+      user-info-uri: https://kapi.kakao.com/v2/user/me
+    naver:
+      client-id: ${NAVER_CLIENT_ID:}
+      client-secret: ${NAVER_CLIENT_SECRET:}
+      redirect-uri: ${NAVER_REDIRECT_URI:http://localhost:3000/oauth/naver/callback}
+      token-uri: https://nid.naver.com/oauth2.0/token
+      user-info-uri: https://openapi.naver.com/v1/nid/me
 
   gov-api:
     base-url: ${GOV_API_BASE_URL:https://apis.data.go.kr/1741000/animal_cremation}
@@ -92,9 +112,9 @@ location:
 # Database Configuration (Master-Slave)
 datasource:
   master:
-    jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_MASTER_PORT:5432}/${DB_NAME:findplace}
-    username: ${DB_USERNAME:findplace}
-    password: ${DB_PASSWORD:findplace123!}
+    jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_MASTER_PORT:5432}/${DB_NAME:petpro}
+    username: ${DB_USERNAME:petpro}
+    password: ${DB_PASSWORD:petpro123!}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: master-pool
@@ -105,12 +125,12 @@ datasource:
 
   slave:
     nodes:
-      - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE1_PORT:5433}/${DB_NAME:findplace}
-        username: ${DB_USERNAME:findplace}
-        password: ${DB_PASSWORD:findplace123!}
-      - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE2_PORT:5434}/${DB_NAME:findplace}
-        username: ${DB_USERNAME:findplace}
-        password: ${DB_PASSWORD:findplace123!}
+      - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE1_PORT:5433}/${DB_NAME:petpro}
+        username: ${DB_USERNAME:petpro}
+        password: ${DB_PASSWORD:petpro123!}
+      - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE2_PORT:5434}/${DB_NAME:petpro}
+        username: ${DB_USERNAME:petpro}
+        password: ${DB_PASSWORD:petpro123!}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: slave-pool
@@ -122,7 +142,7 @@ datasource:
 # Coupon Database Configuration (별도 DB)
 coupon:
   datasource:
-    url: jdbc:postgresql://${COUPON_DB_HOST:localhost}:${COUPON_DB_PORT:5435}/findplace_coupon
+    url: jdbc:postgresql://${COUPON_DB_HOST:localhost}:${COUPON_DB_PORT:5435}/petpro_coupon
     username: ${COUPON_DB_USERNAME:coupon}
     password: ${COUPON_DB_PASSWORD:coupon123!}
     driver-class-name: org.postgresql.Driver
@@ -133,11 +153,37 @@ coupon:
       idle-timeout: 300000
       connection-timeout: 20000
 
+# Log Database Configuration (MySQL Master-Slave)
+log:
+  datasource:
+    master:
+      jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_MASTER_PORT:3306}/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: ${LOG_DB_USERNAME:loguser}
+      password: ${LOG_DB_PASSWORD:logpass123!}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: log-master-pool
+        maximum-pool-size: 10
+        minimum-idle: 3
+        idle-timeout: 300000
+        connection-timeout: 20000
+    slave:
+      jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_SLAVE_PORT:3307}/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: ${LOG_DB_USERNAME:loguser}
+      password: ${LOG_DB_PASSWORD:logpass123!}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: log-slave-pool
+        maximum-pool-size: 10
+        minimum-idle: 3
+        idle-timeout: 300000
+        connection-timeout: 20000
+
 # Logging Configuration
 logging:
   level:
     root: INFO
-    com.findplace: DEBUG
+    com.petpro: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.transaction: DEBUG

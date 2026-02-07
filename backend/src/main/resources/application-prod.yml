@@ -8,5 +8,5 @@ spring:
 logging:
   level:
     root: WARN
-    com.findplace: INFO
+    com.petpro: INFO
     org.hibernate.SQL: WARN

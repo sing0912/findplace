@@ -21,7 +21,7 @@ export const authApi = {
    * @throws 로그인 실패 시 에러
    */
   login: async (data: LoginRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<ApiResponse<TokenResponse>>('/auth/login', data);
+    const response = await apiClient.post<ApiResponse<TokenResponse>>('/v1/auth/login', data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -36,7 +36,7 @@ export const authApi = {
    * @throws 회원가입 실패 시 에러
    */
   register: async (data: RegisterRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<ApiResponse<TokenResponse>>('/auth/register', data);
+    const response = await apiClient.post<ApiResponse<TokenResponse>>('/v1/auth/register', data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -50,7 +50,7 @@ export const authApi = {
    * @throws 토큰 갱신 실패 시 에러
    */
   refresh: async (data: RefreshTokenRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<ApiResponse<TokenResponse>>('/auth/refresh', data);
+    const response = await apiClient.post<ApiResponse<TokenResponse>>('/v1/auth/refresh', data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }

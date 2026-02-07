@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# FindPlace Backend & Frontend 재시작 스크립트
+# PetPro Backend & Frontend 재시작 스크립트
 # 인프라(DB, Redis, MinIO)는 유지하고 앱만 재시작
 # ============================================================
 
@@ -29,7 +29,7 @@ kill_backend() {
     print_info "Backend 프로세스 종료 중..."
 
     # bootRun 프로세스 찾기
-    local pids=$(pgrep -f "bootRun|findplace-backend" 2>/dev/null || true)
+    local pids=$(pgrep -f "bootRun|petpro-backend" 2>/dev/null || true)
 
     if [ -n "$pids" ]; then
         echo "$pids" | xargs kill -9 2>/dev/null || true

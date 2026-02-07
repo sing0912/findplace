@@ -9,9 +9,9 @@
 환경변수:
     DB_HOST: PostgreSQL 호스트 (기본: localhost)
     DB_PORT: PostgreSQL 포트 (기본: 5432)
-    DB_NAME: 데이터베이스 이름 (기본: findplace)
-    DB_USER: 사용자 (기본: findplace)
-    DB_PASSWORD: 비밀번호 (기본: findplace123!)
+    DB_NAME: 데이터베이스 이름 (기본: petpro)
+    DB_USER: 사용자 (기본: petpro)
+    DB_PASSWORD: 비밀번호 (기본: petpro123!)
 """
 
 import csv
@@ -131,9 +131,9 @@ def import_to_db(records):
     db_config = {
         'host': os.environ.get('DB_HOST', 'localhost'),
         'port': os.environ.get('DB_PORT', '5432'),
-        'dbname': os.environ.get('DB_NAME', 'findplace'),
-        'user': os.environ.get('DB_USER', 'findplace'),
-        'password': os.environ.get('DB_PASSWORD', 'findplace123!'),
+        'dbname': os.environ.get('DB_NAME', 'petpro'),
+        'user': os.environ.get('DB_USER', 'petpro'),
+        'password': os.environ.get('DB_PASSWORD', 'petpro123!'),
     }
 
     print(f"DB 연결: {db_config['host']}:{db_config['port']}/{db_config['dbname']}")

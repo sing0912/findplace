@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #===============================================================================
-# FindPlace 설치 및 실행 스크립트
+# PetPro 설치 및 실행 스크립트
 #
 # 사용법:
 #   ./setup.sh              # 전체 설치 및 실행 (로컬)
@@ -263,9 +263,9 @@ install_macos() {
 #-------------------------------------------------------------------------------
 start_services() {
     if [ "$PROD_MODE" = true ]; then
-        print_header "FindPlace 서비스 시작 (프로덕션 모드)"
+        print_header "PetPro 서비스 시작 (프로덕션 모드)"
     else
-        print_header "FindPlace 서비스 시작 (로컬 모드)"
+        print_header "PetPro 서비스 시작 (로컬 모드)"
     fi
 
     # 컨테이너 런타임 확인
@@ -323,7 +323,7 @@ start_services() {
 
     # 기존 백엔드 프로세스 종료
     pkill -f "gradlew.*bootRun" 2>/dev/null || true
-    pkill -f "java.*findplace" 2>/dev/null || true
+    pkill -f "java.*petpro" 2>/dev/null || true
     sleep 2
 
     cd "$PROJECT_ROOT/backend"
@@ -335,9 +335,9 @@ start_services() {
 
     # 백엔드 실행
     print_info "백엔드 서버 시작 중..."
-    nohup ./gradlew bootRun --no-daemon > /tmp/findplace-backend.log 2>&1 &
+    nohup ./gradlew bootRun --no-daemon > /tmp/petpro-backend.log 2>&1 &
     BACKEND_PID=$!
-    echo $BACKEND_PID > /tmp/findplace-backend.pid
+    echo $BACKEND_PID > /tmp/petpro-backend.pid
     cd "$PROJECT_ROOT"
 
     # 백엔드 준비 대기
@@ -351,7 +351,7 @@ start_services() {
             break
         fi
         if [ $i -eq 10 ]; then
-            print_warning "백엔드 상태 확인 필요 - 로그: /tmp/findplace-backend.log"
+            print_warning "백엔드 상태 확인 필요 - 로그: /tmp/petpro-backend.log"
         fi
         sleep 3
     done
@@ -366,9 +366,9 @@ start_services() {
 
     cd "$PROJECT_ROOT/frontend"
     npm install
-    nohup npm start > /tmp/findplace-frontend.log 2>&1 &
+    nohup npm start > /tmp/petpro-frontend.log 2>&1 &
     FRONTEND_PID=$!
-    echo $FRONTEND_PID > /tmp/findplace-frontend.pid
+    echo $FRONTEND_PID > /tmp/petpro-frontend.pid
     cd "$PROJECT_ROOT"
 
     # 프론트엔드 준비 대기
@@ -390,8 +390,8 @@ start_services() {
     echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001 (minioadmin / minioadmin123!)"
     echo ""
     echo -e "  로그 확인:"
-    echo -e "    백엔드: tail -f /tmp/findplace-backend.log"
-    echo -e "    프론트엔드: tail -f /tmp/findplace-frontend.log"
+    echo -e "    백엔드: tail -f /tmp/petpro-backend.log"
+    echo -e "    프론트엔드: tail -f /tmp/petpro-frontend.log"
     echo ""
 }
 
@@ -404,14 +404,14 @@ check_infrastructure() {
     print_info "인프라 상태 확인 중..."
 
     # PostgreSQL Master
-    if $RUNTIME exec findplace-postgres-master pg_isready -U findplace &> /dev/null; then
+    if $RUNTIME exec petpro-postgres-master pg_isready -U petpro &> /dev/null; then
         print_success "PostgreSQL Master: 정상"
     else
         print_warning "PostgreSQL Master: 확인 필요"
     fi
 
     # Redis
-    if $RUNTIME exec findplace-redis redis-cli -a "redis123!" ping 2>/dev/null | grep -q "PONG"; then
+    if $RUNTIME exec petpro-redis redis-cli -a "redis123!" ping 2>/dev/null | grep -q "PONG"; then
         print_success "Redis: 정상"
     else
         print_warning "Redis: 확인 필요"
@@ -429,25 +429,25 @@ check_infrastructure() {
 # 서비스 중지
 #-------------------------------------------------------------------------------
 stop_services() {
-    print_header "FindPlace 서비스 중지"
+    print_header "PetPro 서비스 중지"
 
     # 프론트엔드 중지
     print_info "프론트엔드 중지 중..."
-    if [ -f /tmp/findplace-frontend.pid ]; then
-        kill $(cat /tmp/findplace-frontend.pid) 2>/dev/null || true
-        rm -f /tmp/findplace-frontend.pid
+    if [ -f /tmp/petpro-frontend.pid ]; then
+        kill $(cat /tmp/petpro-frontend.pid) 2>/dev/null || true
+        rm -f /tmp/petpro-frontend.pid
     fi
     pkill -f "react-scripts" 2>/dev/null || true
     pkill -f "node.*start" 2>/dev/null || true
 
     # 백엔드 중지
     print_info "백엔드 중지 중..."
-    if [ -f /tmp/findplace-backend.pid ]; then
-        kill $(cat /tmp/findplace-backend.pid) 2>/dev/null || true
-        rm -f /tmp/findplace-backend.pid
+    if [ -f /tmp/petpro-backend.pid ]; then
+        kill $(cat /tmp/petpro-backend.pid) 2>/dev/null || true
+        rm -f /tmp/petpro-backend.pid
     fi
     pkill -f "gradlew.*bootRun" 2>/dev/null || true
-    pkill -f "java.*findplace" 2>/dev/null || true
+    pkill -f "java.*petpro" 2>/dev/null || true
 
     # 인프라 중지
     print_info "인프라 서비스 중지 중..."
@@ -464,7 +464,7 @@ stop_services() {
 # 서비스 상태 확인
 #-------------------------------------------------------------------------------
 check_status() {
-    print_header "FindPlace 서비스 상태"
+    print_header "PetPro 서비스 상태"
 
     RUNTIME=$(get_container_runtime)
     COMPOSE_CMD=$(get_compose_command)
@@ -502,7 +502,7 @@ check_status() {
 # 전체 초기화 (데이터 삭제)
 #-------------------------------------------------------------------------------
 clean_all() {
-    print_header "FindPlace 전체 초기화"
+    print_header "PetPro 전체 초기화"
 
     print_warning "모든 데이터가 삭제됩니다!"
     read -p "계속하시겠습니까? (y/N): " confirm
@@ -528,8 +528,8 @@ clean_all() {
     rm -rf "$PROJECT_ROOT/frontend/build" 2>/dev/null || true
 
     # 로그 파일 삭제
-    rm -f /tmp/findplace-*.log 2>/dev/null || true
-    rm -f /tmp/findplace-*.pid 2>/dev/null || true
+    rm -f /tmp/petpro-*.log 2>/dev/null || true
+    rm -f /tmp/petpro-*.pid 2>/dev/null || true
 
     print_success "초기화 완료"
 }

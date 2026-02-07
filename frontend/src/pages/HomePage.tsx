@@ -17,10 +17,10 @@ import {
   Box,
 } from '@mui/material';
 import {
-  Business,
-  ShoppingCart,
+  Search,
   CalendarMonth,
-  Pets,
+  ChatBubble,
+  Person,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
@@ -31,32 +31,28 @@ import { useAuthStore } from '../stores/authStore';
  */
 const features = [
   {
-    /** 기능 아이콘 */
-    icon: <Business sx={{ fontSize: 48, color: 'primary.main' }} />,
-    /** 기능 제목 */
-    title: '장례업체 찾기',
-    /** 기능 설명 */
-    description: '내 주변 반려동물 장례 업체를 찾아보세요.',
-    /** 이동할 경로 */
-    path: '/companies',
-  },
-  {
-    icon: <ShoppingCart sx={{ fontSize: 48, color: 'primary.main' }} />,
-    title: '장례용품',
-    description: '다양한 장례용품을 구매하세요.',
-    path: '/products',
+    icon: <Search sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: '시터 검색',
+    description: '내 주변 펫시터를 검색해보세요.',
+    path: '/search',
   },
   {
     icon: <CalendarMonth sx={{ fontSize: 48, color: 'primary.main' }} />,
-    title: '예약하기',
-    description: '장례 서비스를 예약하세요.',
+    title: '예약 내역',
+    description: '예약 현황을 확인하세요.',
     path: '/reservations',
   },
   {
-    icon: <Pets sx={{ fontSize: 48, color: 'primary.main' }} />,
-    title: '추모관',
-    description: '소중한 반려동물을 추모하세요.',
-    path: '/memorial',
+    icon: <ChatBubble sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: '채팅',
+    description: '시터와 실시간 대화하세요.',
+    path: '/chat',
+  },
+  {
+    icon: <Person sx={{ fontSize: 48, color: 'primary.main' }} />,
+    title: '마이페이지',
+    description: '내 정보와 설정을 관리하세요.',
+    path: '/mypage',
   },
 ];
 
@@ -67,7 +63,7 @@ const features = [
  *
  * 기능:
  * - 사용자 이름을 포함한 환영 메시지
- * - 4개의 주요 기능 카드 (장례업체, 장례용품, 예약, 추모관)
+ * - 4개의 주요 기능 카드 (시터 검색, 예약 내역, 채팅, 마이페이지)
  * - 각 카드 클릭 시 해당 페이지로 이동
  */
 const HomePage: React.FC = () => {
@@ -82,7 +78,7 @@ const HomePage: React.FC = () => {
           안녕하세요{user ? `, ${user.name}님` : ''}
         </Typography>
         <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-          FindPlace에서 반려동물 장례 서비스를 이용해보세요.
+          PetPro에서 반려동물 돌봄 서비스를 이용해보세요.
         </Typography>
       </Box>
 

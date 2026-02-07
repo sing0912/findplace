@@ -1,137 +1,188 @@
 /**
- * @fileoverview 반려동물 목록 페이지
+ * @fileoverview 반려동물 목록 페이지 (MUI)
+ * @see docs/develop/pet/frontend.md - U-PET-001
  */
 
-import React, { useState } from 'react';
-import { useMyPets, usePetMutations, usePet } from '../../hooks/usePets';
-import PetCard from '../../components/pet/PetCard';
-import PetForm from '../../components/pet/PetForm';
-import { CreatePetRequest, UpdatePetRequest } from '../../types/pet';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  Chip,
+  Fab,
+  IconButton,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { Add, ArrowBack } from '@mui/icons-material';
+import { useMyPets, usePetMutations } from '../../hooks/usePets';
+import { PetCard } from '../../components/pet';
 
-/**
- * 반려동물 목록 페이지
- */
 const PetListPage: React.FC = () => {
+  const navigate = useNavigate();
   const { pets, totalCount, aliveCount, deceasedCount, loading, error, refetch } = useMyPets();
-  const { createPet, updatePet, deletePet, uploadImage, loading: mutationLoading } = usePetMutations();
-
-  const [showForm, setShowForm] = useState(false);
-  const [editingPetId, setEditingPetId] = useState<number | null>(null);
-
-  const { pet: editingPet } = usePet(editingPetId);
-
-  const handleCreate = async (data: CreatePetRequest | UpdatePetRequest) => {
-    await createPet(data as CreatePetRequest);
-    setShowForm(false);
-    refetch();
-  };
-
-  const handleUpdate = async (data: CreatePetRequest | UpdatePetRequest) => {
-    if (editingPetId) {
-      await updatePet(editingPetId, data as UpdatePetRequest);
-      setEditingPetId(null);
-      refetch();
-    }
-  };
-
-  const handleImageUpload = async (file: File) => {
-    if (editingPetId) {
-      await uploadImage(editingPetId, file);
-    }
-  };
+  const { deletePet } = usePetMutations();
 
   const handleEdit = (id: number) => {
-    setEditingPetId(id);
+    navigate(`/mypage/pets/${id}/edit`);
   };
 
   const handleDelete = async (id: number) => {
-    await deletePet(id);
-    refetch();
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingPetId(null);
+    try {
+      await deletePet(id);
+      refetch();
+    } catch {
+      // 에러는 훅에서 처리
+    }
   };
 
   if (loading) {
-    return <div className="pet-list-page__loading">로딩 중...</div>;
-  }
-
-  if (error) {
     return (
-      <div className="pet-list-page__error">
-        <p>{error}</p>
-        <button onClick={refetch}>다시 시도</button>
-      </div>
+      <Container maxWidth="sm">
+        <Box sx={{ minHeight: '60vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: '#76BCA2' }} />
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="pet-list-page">
-      <header className="pet-list-page__header">
-        <h1>내 반려동물</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="pet-list-page__add-btn"
-          disabled={showForm || editingPetId !== null}
-        >
-          + 반려동물 등록
-        </button>
-      </header>
+    <Container maxWidth="sm">
+      <Box sx={{ minHeight: '100vh', py: 4 }}>
+        {/* 헤더 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <IconButton onClick={() => navigate('/mypage')} sx={{ mr: 1 }}>
+            <ArrowBack />
+          </IconButton>
+          <Typography
+            sx={{
+              fontFamily: 'Noto Sans, sans-serif',
+              fontWeight: 700,
+              fontSize: '16px',
+              color: '#000000',
+              flex: 1,
+              textAlign: 'center',
+              mr: 5,
+            }}
+          >
+            내 반려동물
+          </Typography>
+        </Box>
 
-      {/* 통계 */}
-      <div className="pet-list-page__stats">
-        <span>전체 {totalCount}마리</span>
-        <span>함께하는 {aliveCount}마리</span>
-        <span>무지개다리 {deceasedCount}마리</span>
-      </div>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} action={
+            <Typography
+              component="button"
+              onClick={refetch}
+              sx={{ background: 'none', border: 'none', color: '#76BCA2', cursor: 'pointer', fontSize: '14px' }}
+            >
+              다시 시도
+            </Typography>
+          }>
+            {error}
+          </Alert>
+        )}
 
-      {/* 등록 폼 */}
-      {showForm && (
-        <div className="pet-list-page__form-container">
-          <h2>반려동물 등록</h2>
-          <PetForm
-            onSubmit={handleCreate}
-            onCancel={handleCancel}
-            loading={mutationLoading}
+        {/* 통계 */}
+        <Box sx={{ display: 'flex', gap: 1, mb: 3, px: 2 }}>
+          <Chip
+            label={`전체 ${totalCount}마리`}
+            size="small"
+            sx={{ backgroundColor: '#F5FAF8', fontSize: '12px' }}
           />
-        </div>
-      )}
-
-      {/* 수정 폼 */}
-      {editingPetId && editingPet && (
-        <div className="pet-list-page__form-container">
-          <h2>반려동물 정보 수정</h2>
-          <PetForm
-            pet={editingPet}
-            onSubmit={handleUpdate}
-            onCancel={handleCancel}
-            onImageUpload={handleImageUpload}
-            loading={mutationLoading}
+          <Chip
+            label={`함께하는 ${aliveCount}마리`}
+            size="small"
+            sx={{ backgroundColor: '#E8F5E9', fontSize: '12px' }}
           />
-        </div>
-      )}
-
-      {/* 반려동물 목록 */}
-      {pets.length === 0 ? (
-        <div className="pet-list-page__empty">
-          <p>등록된 반려동물이 없습니다.</p>
-          <p>새로운 반려동물을 등록해주세요!</p>
-        </div>
-      ) : (
-        <div className="pet-list-page__grid">
-          {pets.map((pet) => (
-            <PetCard
-              key={pet.id}
-              pet={pet}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+          {deceasedCount > 0 && (
+            <Chip
+              label={`무지개다리 ${deceasedCount}마리`}
+              size="small"
+              sx={{ backgroundColor: '#E8E0F0', fontSize: '12px' }}
             />
-          ))}
-        </div>
-      )}
-    </div>
+          )}
+        </Box>
+
+        {/* 반려동물 목록 */}
+        <Box sx={{ px: 2 }}>
+          {pets.length === 0 ? (
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+              }}
+            >
+              <Typography sx={{ fontSize: '48px', mb: 2 }}>
+                {'\uD83D\uDC3E'}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: 'Noto Sans KR, sans-serif',
+                  fontSize: '15px',
+                  color: '#AEAEAE',
+                  mb: 1,
+                }}
+              >
+                등록된 반려동물이 없습니다.
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: 'Noto Sans KR, sans-serif',
+                  fontSize: '13px',
+                  color: '#AEAEAE',
+                  mb: 3,
+                }}
+              >
+                새로운 반려동물을 등록해주세요!
+              </Typography>
+              <Fab
+                variant="extended"
+                onClick={() => navigate('/mypage/pets/register')}
+                sx={{
+                  backgroundColor: '#76BCA2',
+                  color: '#FFFFFF',
+                  boxShadow: 'none',
+                  '&:hover': { backgroundColor: '#5FA88E' },
+                }}
+              >
+                <Add sx={{ mr: 0.5 }} />
+                반려동물 등록
+              </Fab>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {pets.map((pet) => (
+                <PetCard
+                  key={pet.id}
+                  pet={pet}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        {/* 등록 FAB (목록 있을 때) */}
+        {pets.length > 0 && totalCount < 10 && (
+          <Fab
+            onClick={() => navigate('/mypage/pets/register')}
+            sx={{
+              position: 'fixed',
+              bottom: 80,
+              right: 24,
+              backgroundColor: '#76BCA2',
+              color: '#FFFFFF',
+              '&:hover': { backgroundColor: '#5FA88E' },
+            }}
+          >
+            <Add />
+          </Fab>
+        )}
+      </Box>
+    </Container>
   );
 };
 

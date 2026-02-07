@@ -5,7 +5,34 @@ spring:
       ddl-auto: update
     show-sql: true
 
+# 로컬 개발 환경: Slave DB를 Master와 동일하게 설정 (별도 Slave 없음)
+datasource:
+  slave:
+    nodes:
+      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
+        username: petpro
+        password: petpro123!
+      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
+        username: petpro
+        password: petpro123!
+
+# 로컬 개발 환경: Log DB Slave를 Master와 동일하게 설정
+log:
+  datasource:
+    slave:
+      jdbc-url: jdbc:mysql://localhost:3306/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      username: loguser
+      password: logpass123!
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+# OAuth 설정 (실제 크레덴셜은 .env 또는 환경변수로 관리)
+app:
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+
 logging:
   level:
     root: DEBUG
-    com.findplace: DEBUG
+    com.petpro: DEBUG

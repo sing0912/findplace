@@ -1,5 +1,5 @@
 # ============================================================
-# FindPlace Makefile
+# PetPro Makefile
 # Docker / Podman 자동 호환
 # ============================================================
 
@@ -45,7 +45,7 @@ endif
 help:
 	@echo ""
 	@echo "╔═══════════════════════════════════════════════════════════╗"
-	@echo "║           FindPlace - 반려동물 장례 토탈 플랫폼           ║"
+	@echo "║           PetPro - 반려동물 장례 토탈 플랫폼           ║"
 	@echo "╚═══════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "런타임: $(CONTAINER_CMD) / $(COMPOSE_CMD)"
@@ -89,7 +89,7 @@ help:
 # ============================================================
 
 init:
-	@echo "FindPlace 초기화 중..."
+	@echo "PetPro 초기화 중..."
 	@chmod +x scripts/*.sh 2>/dev/null || true
 	@chmod +x docker/postgres/*.sh 2>/dev/null || true
 	@cp -n .env.example .env 2>/dev/null || true
@@ -158,8 +158,8 @@ status:
 	@$(COMPOSE_CMD) ps
 	@echo ""
 	@echo "=== Replication 상태 ==="
-	@$(CONTAINER_CMD) exec findplace-postgres-master \
-		psql -U findplace -d findplace \
+	@$(CONTAINER_CMD) exec petpro-postgres-master \
+		psql -U petpro -d petpro \
 		-c "SELECT client_addr, state, sent_lsn, write_lsn FROM pg_stat_replication;" \
 		2>/dev/null || echo "PostgreSQL Master가 실행 중이 아닙니다."
 
@@ -168,23 +168,23 @@ status:
 # ============================================================
 
 db-shell:
-	$(CONTAINER_CMD) exec -it findplace-postgres-master psql -U findplace -d findplace
+	$(CONTAINER_CMD) exec -it petpro-postgres-master psql -U petpro -d petpro
 
 db-shell-slave1:
-	$(CONTAINER_CMD) exec -it findplace-postgres-slave1 psql -U findplace -d findplace
+	$(CONTAINER_CMD) exec -it petpro-postgres-slave1 psql -U petpro -d petpro
 
 db-shell-slave2:
-	$(CONTAINER_CMD) exec -it findplace-postgres-slave2 psql -U findplace -d findplace
+	$(CONTAINER_CMD) exec -it petpro-postgres-slave2 psql -U petpro -d petpro
 
 redis-shell:
-	$(CONTAINER_CMD) exec -it findplace-redis redis-cli -a redis123!
+	$(CONTAINER_CMD) exec -it petpro-redis redis-cli -a redis123!
 
 minio-ls:
-	$(CONTAINER_CMD) exec findplace-minio-init mc ls myminio/
+	$(CONTAINER_CMD) exec petpro-minio-init mc ls myminio/
 
 replication-status:
-	$(CONTAINER_CMD) exec -it findplace-postgres-master \
-		psql -U findplace -d findplace -c "SELECT * FROM pg_stat_replication;"
+	$(CONTAINER_CMD) exec -it petpro-postgres-master \
+		psql -U petpro -d petpro -c "SELECT * FROM pg_stat_replication;"
 
 # ============================================================
 # Backend 명령어

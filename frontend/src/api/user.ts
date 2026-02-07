@@ -21,7 +21,7 @@ export const userApi = {
    * @throws 사용자 생성 실패 시 에러
    */
   create: async (data: CreateUserRequest): Promise<User> => {
-    const response = await apiClient.post<ApiResponse<User>>('/users', data);
+    const response = await apiClient.post<ApiResponse<User>>('/v1/users', data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -35,7 +35,7 @@ export const userApi = {
    * @throws 사용자 조회 실패 시 에러
    */
   getById: async (id: number): Promise<User> => {
-    const response = await apiClient.get<ApiResponse<User>>(`/users/${id}`);
+    const response = await apiClient.get<ApiResponse<User>>(`/v1/users/${id}`);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -48,7 +48,7 @@ export const userApi = {
    * @throws 내 정보 조회 실패 시 에러
    */
   getMe: async (): Promise<User> => {
-    const response = await apiClient.get<ApiResponse<User>>('/users/me');
+    const response = await apiClient.get<ApiResponse<User>>('/v1/users/me');
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -62,7 +62,7 @@ export const userApi = {
    * @throws 목록 조회 실패 시 에러
    */
   getList: async (params?: PageRequest): Promise<PageResponse<UserSimple>> => {
-    const response = await apiClient.get<ApiResponse<PageResponse<UserSimple>>>('/users', { params });
+    const response = await apiClient.get<ApiResponse<PageResponse<UserSimple>>>('/v1/users', { params });
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -77,7 +77,7 @@ export const userApi = {
    * @throws 검색 실패 시 에러
    */
   search: async (keyword: string, params?: PageRequest): Promise<PageResponse<UserSimple>> => {
-    const response = await apiClient.get<ApiResponse<PageResponse<UserSimple>>>('/users/search', {
+    const response = await apiClient.get<ApiResponse<PageResponse<UserSimple>>>('/v1/users/search', {
       params: { keyword, ...params },
     });
     if (response.data.success && response.data.data) {
@@ -94,7 +94,7 @@ export const userApi = {
    * @throws 수정 실패 시 에러
    */
   update: async (id: number, data: UpdateUserRequest): Promise<User> => {
-    const response = await apiClient.put<ApiResponse<User>>(`/users/${id}`, data);
+    const response = await apiClient.put<ApiResponse<User>>(`/v1/users/${id}`, data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -108,7 +108,7 @@ export const userApi = {
    * @throws 비밀번호 변경 실패 시 에러
    */
   updatePassword: async (id: number, data: UpdatePasswordRequest): Promise<void> => {
-    const response = await apiClient.put<ApiResponse<void>>(`/users/${id}/password`, data);
+    const response = await apiClient.put<ApiResponse<void>>(`/v1/users/${id}/password`, data);
     if (!response.data.success) {
       throw new Error(response.data.error?.message || '비밀번호 변경에 실패했습니다.');
     }
@@ -120,7 +120,7 @@ export const userApi = {
    * @throws 삭제 실패 시 에러
    */
   delete: async (id: number): Promise<void> => {
-    const response = await apiClient.delete<ApiResponse<void>>(`/users/${id}`);
+    const response = await apiClient.delete<ApiResponse<void>>(`/v1/users/${id}`);
     if (!response.data.success) {
       throw new Error(response.data.error?.message || '사용자 삭제에 실패했습니다.');
     }

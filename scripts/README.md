@@ -1,4 +1,4 @@
-# FindPlace 스크립트
+# PetPro 스크립트
 
 Docker와 Podman을 자동으로 감지하여 호환되는 실행 스크립트입니다.
 

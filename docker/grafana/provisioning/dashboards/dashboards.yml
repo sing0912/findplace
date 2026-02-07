@@ -1,10 +1,10 @@
 apiVersion: 1
 
 providers:
-  - name: 'FindPlace Dashboards'
+  - name: 'PetPro Dashboards'
     orgId: 1
-    folder: 'FindPlace'
-    folderUid: 'findplace'
+    folder: 'PetPro'
+    folderUid: 'petpro'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30

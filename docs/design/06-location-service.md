@@ -14,7 +14,7 @@
 packages/
 ├── location-service/              # 백엔드 Java 패키지
 │   ├── src/main/java/
-│   │   └── com/findplace/location/
+│   │   └── com/petpro/location/
 │   │       ├── config/
 │   │       ├── service/
 │   │       ├── dto/
@@ -35,7 +35,7 @@ packages/
 ### 2.2 백엔드 패키지 구조
 
 ```
-com.findplace.location/
+com.petpro.location/
 ├── config/
 │   ├── GoogleMapsConfig.java
 │   └── LocationServiceAutoConfiguration.java
@@ -61,7 +61,7 @@ com.findplace.location/
 ### 2.3 프론트엔드 패키지 구조
 
 ```
-@findplace/location-ui/
+@petpro/location-ui/
 ├── src/
 │   ├── components/
 │   │   ├── GoogleMap/
@@ -751,7 +751,7 @@ dependencies {
 ### 6.3 프론트엔드 설치
 
 ```bash
-npm install @findplace/location-ui
+npm install @petpro/location-ui
 ```
 
 ### 6.4 프론트엔드 사용 예시
@@ -762,7 +762,7 @@ import {
   AddressSearch,
   CurrentLocationButton,
   useGeocode
-} from '@findplace/location-ui';
+} from '@petpro/location-ui';
 
 function MyComponent() {
   const [center, setCenter] = useState({ latitude: 37.5065, longitude: 127.0536 });
@@ -807,7 +807,7 @@ function MyComponent() {
 
 ```
 HTTP 리퍼러 제한 (프론트엔드):
-- https://findplace.com/*
+- https://petpro.com/*
 - http://localhost:3000/*
 
 IP 제한 (백엔드):
@@ -876,7 +876,7 @@ plugins {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'com.findplace'
+            groupId = 'com.petpro'
             artifactId = 'location-service'
             version = '1.0.0'
             from components.java
@@ -890,7 +890,7 @@ publishing {
 ```json
 // package.json
 {
-  "name": "@findplace/location-ui",
+  "name": "@petpro/location-ui",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

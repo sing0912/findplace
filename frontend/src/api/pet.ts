@@ -16,7 +16,7 @@ import {
  * 내 반려동물 목록 조회
  */
 export const getMyPets = async (): Promise<PetListResponse> => {
-  const response = await apiClient.get<ApiResponse<PetListResponse>>('/pets');
+  const response = await apiClient.get<ApiResponse<PetListResponse>>('/v1/pets');
   return response.data.data!;
 };
 
@@ -24,7 +24,7 @@ export const getMyPets = async (): Promise<PetListResponse> => {
  * 반려동물 상세 조회
  */
 export const getPet = async (id: number): Promise<Pet> => {
-  const response = await apiClient.get<ApiResponse<Pet>>(`/pets/${id}`);
+  const response = await apiClient.get<ApiResponse<Pet>>(`/v1/pets/${id}`);
   return response.data.data!;
 };
 
@@ -32,7 +32,7 @@ export const getPet = async (id: number): Promise<Pet> => {
  * 반려동물 등록
  */
 export const createPet = async (request: CreatePetRequest): Promise<Pet> => {
-  const response = await apiClient.post<ApiResponse<Pet>>('/pets', request);
+  const response = await apiClient.post<ApiResponse<Pet>>('/v1/pets', request);
   return response.data.data!;
 };
 
@@ -40,7 +40,7 @@ export const createPet = async (request: CreatePetRequest): Promise<Pet> => {
  * 반려동물 정보 수정
  */
 export const updatePet = async (id: number, request: UpdatePetRequest): Promise<Pet> => {
-  const response = await apiClient.put<ApiResponse<Pet>>(`/pets/${id}`, request);
+  const response = await apiClient.put<ApiResponse<Pet>>(`/v1/pets/${id}`, request);
   return response.data.data!;
 };
 
@@ -51,7 +51,7 @@ export const uploadPetImage = async (id: number, file: File): Promise<Pet> => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await apiClient.post<ApiResponse<Pet>>(`/pets/${id}/image`, formData, {
+  const response = await apiClient.post<ApiResponse<Pet>>(`/v1/pets/${id}/image`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -63,13 +63,13 @@ export const uploadPetImage = async (id: number, file: File): Promise<Pet> => {
  * 반려동물 삭제
  */
 export const deletePet = async (id: number): Promise<void> => {
-  await apiClient.delete(`/pets/${id}`);
+  await apiClient.delete(`/v1/pets/${id}`);
 };
 
 /**
  * 사망 처리
  */
 export const markAsDeceased = async (id: number, request: DeceasedRequest): Promise<Pet> => {
-  const response = await apiClient.patch<ApiResponse<Pet>>(`/pets/${id}/deceased`, request);
+  const response = await apiClient.patch<ApiResponse<Pet>>(`/v1/pets/${id}/deceased`, request);
   return response.data.data!;
 };

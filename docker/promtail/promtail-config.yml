@@ -15,9 +15,9 @@ scrape_configs:
       - targets:
           - localhost
         labels:
-          job: findplace-backend
+          job: petpro-backend
           app: backend
-          __path__: /var/log/findplace/*.log
+          __path__: /var/log/petpro/*.log
     pipeline_stages:
       - multiline:
           firstline: '^\d{4}-\d{2}-\d{2}'

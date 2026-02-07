@@ -22,7 +22,9 @@ import {
   AccountCircle,
   Logout,
   Settings,
+  Person,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useAuth } from '../../hooks/useAuth';
@@ -39,6 +41,7 @@ const Header: React.FC = () => {
   const { user } = useAuthStore();
   const { toggleSidebar } = useUIStore();
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   /** 사용자 메뉴 앵커 엘리먼트 */
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -83,7 +86,7 @@ const Header: React.FC = () => {
 
         {/* 애플리케이션 타이틀 */}
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          FindPlace
+          PetPro
         </Typography>
 
         {/* 사용자 메뉴 (로그인된 경우에만 표시) */}
@@ -128,6 +131,11 @@ const Header: React.FC = () => {
                 </Typography>
               </MenuItem>
               <Divider />
+              {/* 마이페이지 메뉴 */}
+              <MenuItem onClick={() => { handleClose(); navigate('/mypage'); }}>
+                <Person fontSize="small" sx={{ mr: 1 }} />
+                마이페이지
+              </MenuItem>
               {/* 설정 메뉴 */}
               <MenuItem onClick={handleClose}>
                 <Settings fontSize="small" sx={{ mr: 1 }} />

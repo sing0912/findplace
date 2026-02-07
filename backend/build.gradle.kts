@@ -5,7 +5,7 @@ plugins {
     id("jacoco")
 }
 
-group = "com.findplace"
+group = "com.petpro"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -35,8 +35,10 @@ dependencies {
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.mysql:mysql-connector-j")
     implementation("org.flywaydb:flyway-core:10.10.0")
     runtimeOnly("org.flywaydb:flyway-database-postgresql:10.10.0")
+    runtimeOnly("org.flywaydb:flyway-mysql:10.10.0")
 
     // JWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
@@ -79,12 +81,30 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:junit-jupiter:1.19.7")
     testImplementation("org.testcontainers:postgresql:1.19.7")
+    testImplementation("org.testcontainers:mysql:1.19.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    systemProperty("e2e.profiles", System.getProperty("e2e.profiles") ?: "test")
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showCauses = true
+        showStackTraces = true
+        afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ desc, result ->
+            if (desc.parent == null) {
+                println("\n테스트 결과: ${result.resultType} " +
+                    "(전체 ${result.testCount}개, " +
+                    "성공 ${result.successfulTestCount}개, " +
+                    "실패 ${result.failedTestCount}개, " +
+                    "건너뜀 ${result.skippedTestCount}개)")
+            }
+        }))
+    }
 }
 
 // JaCoCo Configuration for 100% coverage

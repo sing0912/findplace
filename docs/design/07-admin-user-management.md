@@ -122,7 +122,7 @@ GET /admin/users?page=0&size=20&sort=createdAt,desc&status=ACTIVE&role=USER&keyw
   "roleName": "일반 사용자",
   "status": "ACTIVE",
   "statusName": "활성",
-  "profileImageUrl": "https://storage.findplace.com/profiles/1.jpg",
+  "profileImageUrl": "https://storage.petpro.com/profiles/1.jpg",
   "lastLoginAt": "2025-01-25T09:30:00",
   "createdAt": "2025-01-20T14:30:00",
   "updatedAt": "2025-01-25T10:00:00",

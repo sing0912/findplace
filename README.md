@@ -1,4 +1,4 @@
-# FindPlace - 반려동물 장례 토탈 플랫폼
+# PetPro - 반려동물 장례 토탈 플랫폼
 
 반려동물 장례 서비스를 위한 통합 플랫폼입니다.
 
@@ -25,7 +25,7 @@
 ## 프로젝트 구조
 
 ```text
-findplace/
+petpro/
 ├── AGENTS.md                           # 프로젝트 메인 지침
 ├── README.md                           # 이 문서
 ├── Makefile                            # 빌드/실행 명령어
@@ -40,8 +40,8 @@ findplace/
 │   ├── gradlew                         # Gradle Wrapper
 │   └── src/
 │       ├── main/
-│       │   ├── java/com/findplace/
-│       │   │   ├── FindPlaceApplication.java
+│       │   ├── java/com/petpro/
+│       │   │   ├── PetProApplication.java
 │       │   │   ├── domain/             # 도메인 계층
 │       │   │   │   ├── auth/           # 인증 도메인
 │       │   │   │   │   ├── controller/AuthController.java
@@ -85,8 +85,8 @@ findplace/
 │       │           ├── V2__create_companies_table.sql
 │       │           └── V3__create_suppliers_table.sql
 │       └── test/                       # 테스트 코드
-│           ├── java/com/findplace/
-│           │   ├── FindPlaceApplicationTests.java
+│           ├── java/com/petpro/
+│           │   ├── PetProApplicationTests.java
 │           │   └── domain/user/service/UserServiceTest.java
 │           └── resources/application-test.yml
 │
@@ -238,8 +238,8 @@ findplace/
 
 ```bash
 # 저장소 클론
-git clone https://github.com/sing0912/findplace.git
-cd findplace
+git clone https://github.com/sing0912/petpro.git
+cd petpro
 
 # 전체 설치 및 실행
 chmod +x setup.sh
@@ -415,9 +415,9 @@ Authorization: Bearer {accessToken}
 ```env
 # Database
 DB_HOST=localhost
-DB_NAME=findplace
-DB_USERNAME=findplace
-DB_PASSWORD=findplace123!
+DB_NAME=petpro
+DB_USERNAME=petpro
+DB_PASSWORD=petpro123!
 DB_MASTER_PORT=5432
 DB_SLAVE1_PORT=5433
 DB_SLAVE2_PORT=5434
@@ -436,7 +436,7 @@ JWT_REFRESH_EXPIRATION=1209600
 MINIO_ENDPOINT=http://localhost:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin123!
-MINIO_BUCKET=findplace
+MINIO_BUCKET=petpro
 
 # Application
 APP_PORT=8080
@@ -450,18 +450,18 @@ FRONTEND_URL=http://localhost:3000
 
 ```bash
 # 백엔드 로그
-tail -f /tmp/findplace-backend.log
+tail -f /tmp/petpro-backend.log
 
 # 프론트엔드 로그
-tail -f /tmp/findplace-frontend.log
+tail -f /tmp/petpro-frontend.log
 
 # Docker 컨테이너 로그
-docker logs findplace-postgres-master
-docker logs findplace-redis
-docker logs findplace-minio
+docker logs petpro-postgres-master
+docker logs petpro-redis
+docker logs petpro-minio
 
 # 에러만 확인
-grep -i "error\|exception" /tmp/findplace-backend.log
+grep -i "error\|exception" /tmp/petpro-backend.log
 ```
 
 ---
@@ -495,9 +495,9 @@ grep -i "error\|exception" /tmp/findplace-backend.log
 
 ```bash
 # 1. SSL 인증서 발급
-docker stop findplace-nginx
+docker stop petpro-nginx
 certbot certonly --standalone -d dev.findplace.co.kr -m your@email.com --agree-tos
-docker start findplace-nginx
+docker start petpro-nginx
 
 # 2. SSL 설정 적용
 cp docker/nginx/conf.d/ssl.conf.prod docker/nginx/conf.d/ssl.conf

@@ -6,7 +6,7 @@
 
 ### 1.1 핵심 특징
 
-- **별도 DB**: `findplace_coupon` (Port: 5435)
+- **별도 DB**: `petpro_coupon` (Port: 5435)
 - **EAV 패턴**: 유연한 쿠폰 조건 설정
 - **자동 발급**: 이벤트 기반 쿠폰 발급
 - **배치 처리**: 생일 쿠폰, 만료 쿠폰 자동 회수
@@ -518,13 +518,13 @@ public void onReviewWrite(ReviewWriteEvent event) {
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/findplace
-    username: findplace
-    password: findplace123!
+    url: jdbc:postgresql://localhost:5432/petpro
+    username: petpro
+    password: petpro123!
 
 coupon:
   datasource:
-    url: jdbc:postgresql://localhost:5435/findplace_coupon
+    url: jdbc:postgresql://localhost:5435/petpro_coupon
     username: coupon
     password: coupon123!
 ```
@@ -655,7 +655,7 @@ CREATE INDEX idx_coupon_conditions_coupon ON coupon_conditions(coupon_id);
 ```
 ┌─────────────────┐     REST API      ┌─────────────────┐
 │   Main Service  │ ───────────────── │ Coupon Service  │
-│   (findplace)   │                   │ (독립 서비스)    │
+│   (petpro)   │                   │ (독립 서비스)    │
 └─────────────────┘                   └─────────────────┘
          │                                     │
          ▼                                     ▼

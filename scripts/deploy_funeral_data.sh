@@ -6,7 +6,7 @@ set -e
 # 서버 정보
 SERVER_HOST="1.234.5.95"
 SERVER_USER="root"
-SERVER_PATH="/home/findplace"
+SERVER_PATH="/home/petpro"
 
 # 로컬 파일 경로
 CSV_FILE="$HOME/Desktop/data.csv"
@@ -42,7 +42,7 @@ echo ""
 # 2. 서버에서 스크립트 실행
 echo "🚀 서버에서 import 실행 중..."
 ssh "$SERVER_USER@$SERVER_HOST" << 'EOF'
-cd /home/findplace
+cd /home/petpro
 
 # Python 패키지 설치 (없으면)
 pip install psycopg2-binary pyproj -q 2>/dev/null || pip3 install psycopg2-binary pyproj -q

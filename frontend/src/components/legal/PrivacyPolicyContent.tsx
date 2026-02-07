@@ -35,7 +35,7 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
         개인정보처리방침
       </Typography>
       <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-        시행일: 2026년 1월 25일
+        시행일: 2026년 2월 7일
       </Typography>
 
       <Divider sx={{ my: 2 }} />
@@ -48,7 +48,7 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
         ① 이 방침은 『개인정보보호법』, 『정보통신망 이용촉진 및 정보보호에 관한 법률』상의
         개인정보보호규정 및 방송통신위원회가 제정한 『개인정보보호지침』을 준수하여 이용자의
         개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리함으로써 베뉴네트웍스(이하
-        "회사")가 제공하는 파인드플레이스(FINDPLACE) 서비스(이하 "서비스") 이용자들의
+        "회사")가 제공하는 펫프로(PETPRO) 서비스(이하 "서비스") 이용자들의
         개인정보보호와 고충처리에 이바지함을 목적으로 합니다.
       </Typography>
       <Typography variant="body2" paragraph>
@@ -90,7 +90,7 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
               <TableCell>필수</TableCell>
               <TableCell>회원가입</TableCell>
               <TableCell>이메일, 비밀번호, 닉네임</TableCell>
-              <TableCell rowSpan={6}>
+              <TableCell rowSpan={7}>
                 회원탈퇴 및 수집 목적 달성 시까지. 단, 관계법령의 규정에 따라 보존할 필요가 있는
                 경우를 제외
               </TableCell>
@@ -107,13 +107,18 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
             </TableRow>
             <TableRow>
               <TableCell>필수</TableCell>
-              <TableCell>장례 신청 및 상담</TableCell>
-              <TableCell>이름, 핸드폰 번호, 장례 픽업 신청 주소</TableCell>
+              <TableCell>돌봄 예약 및 상담</TableCell>
+              <TableCell>이름, 핸드폰 번호, 주소, 반려동물 정보</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>필수</TableCell>
-              <TableCell>상품구매 및 배송</TableCell>
-              <TableCell>이름, 이메일, 핸드폰 번호, 주소, 결제정보</TableCell>
+              <TableCell>결제 정보 처리</TableCell>
+              <TableCell>이름, 이메일, 결제정보</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>선택</TableCell>
+              <TableCell>위치기반 서비스</TableCell>
+              <TableCell>GPS 좌표, 돌봄 중 위치 트래킹 데이터</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>필수</TableCell>
@@ -265,7 +270,7 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
       </Typography>
       <Typography variant="body2" paragraph>
         ① 이용자 및 법정대리인은 등록되어 있는 본인 혹은 당해 피대리인의 개인정보를 열람하거나
-        정정할 수 있습니다. 개인정보 열람 및 정정을 하고자 할 경우에는 파인드플레이스 서비스의
+        정정할 수 있습니다. 개인정보 열람 및 정정을 하고자 할 경우에는 펫프로 서비스의
         '마이페이지' {'>'} '수정'을 클릭하여 직접 열람 또는 수정하거나, 고객센터를 통하여 문의 시
         회사는 신속하게 처리될 수 있도록 최선의 노력을 합니다.
       </Typography>
@@ -366,7 +371,7 @@ const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
       <Divider sx={{ my: 2 }} />
 
       <Typography variant="body2" align="center" color="textSecondary">
-        이 개인정보 처리방침은 2026년 1월 25일부터 적용됩니다.
+        이 개인정보 처리방침은 2026년 2월 7일부터 적용됩니다.
       </Typography>
     </>
   );

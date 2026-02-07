@@ -3,7 +3,7 @@
     <!-- Spring Boot default patterns -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="findplace-backend"/>
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="petpro-backend"/>
     <springProperty scope="context" name="lokiUrl" source="loki.url" defaultValue="http://localhost:3100"/>
 
     <!-- Console Appender -->
@@ -53,7 +53,7 @@
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>
         </root>
-        <logger name="com.findplace" level="DEBUG"/>
+        <logger name="com.petpro" level="DEBUG"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 
@@ -64,7 +64,7 @@
             <appender-ref ref="FILE"/>
             <appender-ref ref="LOKI"/>
         </root>
-        <logger name="com.findplace" level="DEBUG"/>
+        <logger name="com.petpro" level="DEBUG"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 
@@ -74,6 +74,6 @@
             <appender-ref ref="FILE"/>
             <appender-ref ref="LOKI"/>
         </root>
-        <logger name="com.findplace" level="INFO"/>
+        <logger name="com.petpro" level="INFO"/>
     </springProfile>
 </configuration>

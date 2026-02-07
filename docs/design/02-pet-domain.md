@@ -117,7 +117,7 @@
   "gender": "MALE",
   "genderName": "수컷",
   "isNeutered": true,
-  "profileImageUrl": "https://storage.findplace.com/pets/1.jpg",
+  "profileImageUrl": "https://storage.petpro.com/pets/1.jpg",
   "memo": "활발하고 사람을 좋아함",
   "isDeceased": false,
   "deceasedAt": null,
@@ -148,7 +148,7 @@
       "age": 4,
       "gender": "MALE",
       "isDeceased": false,
-      "profileImageUrl": "https://storage.findplace.com/pets/1.jpg"
+      "profileImageUrl": "https://storage.petpro.com/pets/1.jpg"
     },
     {
       "id": 2,
@@ -160,7 +160,7 @@
       "gender": "MALE",
       "isDeceased": true,
       "deceasedAt": "2023-05-20",
-      "profileImageUrl": "https://storage.findplace.com/pets/2.jpg"
+      "profileImageUrl": "https://storage.petpro.com/pets/2.jpg"
     }
   ],
   "totalCount": 2,
@@ -310,7 +310,7 @@ Pet  (1) ──────────── (1) Memorial  : 사망한 반려�
 
 ### 10.1 프로필 이미지
 
-- 저장 위치: MinIO - `findplace/pets/{petId}/profile.{ext}`
+- 저장 위치: MinIO - `petpro/pets/{petId}/profile.{ext}`
 - 허용 확장자: jpg, jpeg, png, gif, webp
 - 최대 크기: 5MB
 - 이미지 리사이징: 400x400 (썸네일)

@@ -4,7 +4,7 @@
  * 이 파일은 애플리케이션의 전체 구조를 정의하며, 다음을 포함합니다:
  * - React Query 클라이언트 설정 (서버 상태 관리)
  * - Material-UI 테마 설정 (다크 모드 지원)
- * - 라우팅 구성 (공개/보호 라우트)
+ * - 라우팅 구성 (공개/보호/관리자 라우트)
  * - 전역 알림 시스템
  */
 
@@ -15,16 +15,58 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
 // Layouts
 import MainLayout from './components/layout/MainLayout';
+import { AdminLayout } from './components/admin/layout';
 
 // Pages
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
 import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
-import NearbyFuneralHomesPage from './pages/funeralhome/NearbyFuneralHomesPage';
+import TermsOfUsePage from './pages/legal/TermsOfUsePage';
+// Auth Pages
+import {
+  LoginStartPage,
+  OAuthCallbackPage,
+  RegisterStep1Page,
+  RegisterStep2Page,
+  RegisterCompletePage,
+  FindIdPage,
+  FindIdVerifyPage,
+  FindIdResultPage,
+  ResetPasswordPage,
+  ResetPasswordVerifyPage,
+  ResetPasswordConfirmPage,
+} from './pages/auth';
+
+// Admin Pages
+import {
+  AdminLoginPage,
+  DashboardPage,
+  UserManagementPage,
+  CompanyManagementPage,
+  SupplierManagementPage,
+  InventoryManagementPage,
+} from './pages/admin';
+
+// MyPage Pages
+import { MyPage, EditProfilePage, ChangePasswordPage, PolicyListPage } from './pages/mypage';
+
+// Pet Pages
+import {
+  PetListPage,
+  PetRegisterPage,
+  PetEditPage,
+  PetChecklistPage,
+} from './pages/pet';
+
+// Inquiry Pages
+import {
+  InquiryListPage,
+  InquiryWritePage,
+  InquiryDetailPage,
+} from './pages/inquiry';
 
 // Components
 import ProtectedRoute from './components/common/ProtectedRoute';
+import AdminProtectedRoute from './components/admin/common/AdminProtectedRoute';
 import Notification from './components/common/Notification';
 
 // Stores
@@ -32,16 +74,12 @@ import { useUIStore } from './stores/uiStore';
 
 /**
  * React Query 클라이언트 인스턴스
- * 서버 상태 관리를 위한 기본 옵션을 설정합니다.
  */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      /** 윈도우 포커스 시 자동 재조회 비활성화 */
       refetchOnWindowFocus: false,
-      /** 실패 시 1회 재시도 */
       retry: 1,
-      /** 데이터 신선도 유지 시간: 5분 */
       staleTime: 5 * 60 * 1000,
     },
   },
@@ -49,8 +87,6 @@ const queryClient = new QueryClient({
 
 /**
  * Material-UI 테마 생성 함수
- * @param darkMode - 다크 모드 활성화 여부
- * @returns 생성된 MUI 테마 객체
  */
 const getTheme = (darkMode: boolean) =>
   createTheme({
@@ -78,7 +114,6 @@ const getTheme = (darkMode: boolean) =>
       MuiButton: {
         styleOverrides: {
           root: {
-            /** 버튼 텍스트 대문자 변환 비활성화 */
             textTransform: 'none',
           },
         },
@@ -88,7 +123,6 @@ const getTheme = (darkMode: boolean) =>
 
 /**
  * 애플리케이션의 주요 콘텐츠 컴포넌트
- * 테마, 라우팅, 알림 시스템을 구성합니다.
  */
 const AppContent: React.FC = () => {
   const { darkMode } = useUIStore();
@@ -98,14 +132,53 @@ const AppContent: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Notification />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          {/* 공개 라우트 - 인증 없이 접근 가능 */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          {/* 공개 라우트 (사용자) - 인증 없이 접근 가능 */}
+          <Route path="/login" element={<LoginStartPage />} />
+          <Route path="/oauth/:provider/callback" element={<OAuthCallbackPage />} />
 
-          {/* 보호된 라우트 - 인증된 사용자만 접근 가능 */}
+          {/* 회원가입 */}
+          <Route path="/register" element={<RegisterStep1Page />} />
+          <Route path="/register/info" element={<RegisterStep2Page />} />
+          <Route path="/register/complete" element={<RegisterCompletePage />} />
+
+          {/* 아이디 찾기 */}
+          <Route path="/find-id" element={<FindIdPage />} />
+          <Route path="/find-id/verify" element={<FindIdVerifyPage />} />
+          <Route path="/find-id/result" element={<FindIdResultPage />} />
+
+          {/* 비밀번호 재설정 */}
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/reset-password/verify" element={<ResetPasswordVerifyPage />} />
+          <Route path="/reset-password/confirm" element={<ResetPasswordConfirmPage />} />
+
+          {/* 약관 */}
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsOfUsePage />} />
+
+          {/* 공개 라우트 (관리자) */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+
+          {/* 관리자 보호 라우트 - AdminProtectedRoute + AdminLayout */}
+          <Route
+            path="/admin"
+            element={
+              <AdminProtectedRoute>
+                <AdminLayout />
+              </AdminProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="users" element={<UserManagementPage />} />
+            <Route path="companies" element={<CompanyManagementPage />} />
+            <Route path="suppliers" element={<SupplierManagementPage />} />
+            <Route path="inventory" element={<InventoryManagementPage />} />
+          </Route>
+
+          {/* 사용자 보호 라우트 - ProtectedRoute + MainLayout */}
           <Route
             path="/"
             element={
@@ -115,46 +188,26 @@ const AppContent: React.FC = () => {
             }
           >
             <Route index element={<HomePage />} />
-            <Route path="companies" element={<div>장례업체 목록</div>} />
-            <Route path="products" element={<div>상품 목록</div>} />
-            <Route path="reservations" element={<div>예약 관리</div>} />
-            <Route path="orders" element={<div>주문 내역</div>} />
-            <Route path="memorial" element={<div>추모관</div>} />
-            <Route path="nearby" element={<NearbyFuneralHomesPage />} />
+            <Route path="search" element={<div>시터 검색 (준비 중)</div>} />
+            <Route path="reservations" element={<div>예약 (준비 중)</div>} />
+            <Route path="chat" element={<div>채팅 (준비 중)</div>} />
 
-            {/* 관리자 전용 라우트 */}
-            <Route
-              path="admin/dashboard"
-              element={
-                <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
-                  <div>관리자 대시보드</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/users"
-              element={
-                <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
-                  <div>사용자 관리</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/companies"
-              element={
-                <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
-                  <div>업체 관리</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="admin/suppliers"
-              element={
-                <ProtectedRoute roles={['ADMIN', 'SUPER_ADMIN']}>
-                  <div>공급사 관리</div>
-                </ProtectedRoute>
-              }
-            />
+            {/* 마이페이지 */}
+            <Route path="mypage" element={<MyPage />} />
+            <Route path="mypage/edit" element={<EditProfilePage />} />
+            <Route path="mypage/password" element={<ChangePasswordPage />} />
+            <Route path="mypage/policy" element={<PolicyListPage />} />
+
+            {/* 펫 관리 */}
+            <Route path="mypage/pets" element={<PetListPage />} />
+            <Route path="mypage/pets/register" element={<PetRegisterPage />} />
+            <Route path="mypage/pets/:id/edit" element={<PetEditPage />} />
+            <Route path="mypage/pets/:id/checklist" element={<PetChecklistPage />} />
+
+            {/* 문의 게시판 */}
+            <Route path="mypage/inquiry" element={<InquiryListPage />} />
+            <Route path="mypage/inquiry/write" element={<InquiryWritePage />} />
+            <Route path="mypage/inquiry/:id" element={<InquiryDetailPage />} />
           </Route>
 
           {/* 알 수 없는 경로는 홈으로 리다이렉트 */}
@@ -167,7 +220,6 @@ const AppContent: React.FC = () => {
 
 /**
  * 애플리케이션의 최상위 컴포넌트
- * React Query Provider로 전체 앱을 감싸서 서버 상태 관리 기능을 제공합니다.
  */
 const App: React.FC = () => {
   return (

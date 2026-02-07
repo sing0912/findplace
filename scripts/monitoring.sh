@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# FindPlace Monitoring Stack Management Script
+# PetPro Monitoring Stack Management Script
 # Usage: ./scripts/monitoring.sh [start|stop|status|logs|restart]
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -23,7 +23,7 @@ MONITORING_SERVICES="prometheus loki promtail tempo grafana"
 function print_header() {
     echo ""
     echo "=========================================="
-    echo "  FindPlace Monitoring Stack"
+    echo "  PetPro Monitoring Stack"
     echo "=========================================="
     echo ""
 }

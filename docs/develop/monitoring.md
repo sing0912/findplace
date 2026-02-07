@@ -1,8 +1,8 @@
-# FindPlace 모니터링 가이드
+# PetPro 모니터링 가이드
 
 ## 1. 개요
 
-FindPlace는 Grafana 기반의 풀스택 관제 시스템을 사용합니다.
+PetPro는 Grafana 기반의 풀스택 관제 시스템을 사용합니다.
 
 | 컴포넌트 | 역할 | 포트 |
 |---------|-----|-----|
@@ -74,19 +74,19 @@ FindPlace는 Grafana 기반의 풀스택 관제 시스템을 사용합니다.
 
 ```promql
 # 평균 응답 시간
-rate(http_server_requests_seconds_sum{application="findplace-backend"}[5m])
-/ rate(http_server_requests_seconds_count{application="findplace-backend"}[5m])
+rate(http_server_requests_seconds_sum{application="petpro-backend"}[5m])
+/ rate(http_server_requests_seconds_count{application="petpro-backend"}[5m])
 
 # 요청 처리량 (RPS)
-sum(rate(http_server_requests_seconds_count{application="findplace-backend"}[5m]))
+sum(rate(http_server_requests_seconds_count{application="petpro-backend"}[5m]))
 
 # JVM Heap 사용률
-sum(jvm_memory_used_bytes{application="findplace-backend",area="heap"})
-/ sum(jvm_memory_max_bytes{application="findplace-backend",area="heap"}) * 100
+sum(jvm_memory_used_bytes{application="petpro-backend",area="heap"})
+/ sum(jvm_memory_max_bytes{application="petpro-backend",area="heap"}) * 100
 
 # 에러율
-sum(rate(http_server_requests_seconds_count{application="findplace-backend",status=~"5.."}[5m]))
-/ sum(rate(http_server_requests_seconds_count{application="findplace-backend"}[5m])) * 100
+sum(rate(http_server_requests_seconds_count{application="petpro-backend",status=~"5.."}[5m]))
+/ sum(rate(http_server_requests_seconds_count{application="petpro-backend"}[5m])) * 100
 ```
 
 ## 5. 로그 (Loki)
@@ -100,22 +100,22 @@ sum(rate(http_server_requests_seconds_count{application="findplace-backend",stat
 
 ```logql
 # 특정 서비스 로그
-{job="findplace-backend"}
+{job="petpro-backend"}
 
 # 에러 로그만
-{job="findplace-backend"} |= "ERROR"
+{job="petpro-backend"} |= "ERROR"
 
 # TraceID로 검색
-{job="findplace-backend"} |= "traceId=abc123"
+{job="petpro-backend"} |= "traceId=abc123"
 
 # JSON 파싱 후 필터
-{job="findplace-backend"} | json | level="ERROR"
+{job="petpro-backend"} | json | level="ERROR"
 ```
 
 ### 로그 파일 위치
 
-- `logs/findplace-backend.log`: 현재 로그
-- `logs/findplace-backend.YYYY-MM-DD.*.log`: 롤링된 로그
+- `logs/petpro-backend.log`: 현재 로그
+- `logs/petpro-backend.YYYY-MM-DD.*.log`: 롤링된 로그
 
 ## 6. 트레이싱 (Tempo)
 
@@ -142,7 +142,7 @@ sum(rate(http_server_requests_seconds_count{application="findplace-backend",stat
 
 | 대시보드 | 설명 |
 |---------|------|
-| FindPlace Overview | 전체 시스템 개요 |
+| PetPro Overview | 전체 시스템 개요 |
 
 ### 대시보드 구성
 

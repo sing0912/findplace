@@ -61,7 +61,7 @@ apiClient.interceptors.response.use(
         try {
           // Refresh Token으로 새 Access Token 요청
           const response = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
-            `${API_BASE_URL}/auth/refresh`,
+            `${API_BASE_URL}/v1/auth/refresh`,
             { refreshToken }
           );
 
@@ -80,11 +80,13 @@ apiClient.interceptors.response.use(
           // 토큰 갱신 실패 시 로그인 페이지로 리다이렉트
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
+          const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
+          window.location.href = loginPath;
         }
       } else {
         // Refresh Token이 없으면 로그인 페이지로 리다이렉트
-        window.location.href = '/login';
+        const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
+        window.location.href = loginPath;
       }
     }
 

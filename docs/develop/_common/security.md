@@ -87,26 +87,24 @@
 ### 역할 기반 접근 제어 (RBAC)
 
 ```java
-public enum Role {
-    CUSTOMER,           // 일반 사용자
-    COMPANY_ADMIN,      // 장례업체 관리자
-    SUPPLIER_ADMIN,     // 공급사 관리자
-    PLATFORM_ADMIN      // 플랫폼 관리자
+public enum UserRole {
+    CUSTOMER,       // 반려인 - 시터 검색, 예약, 결제, 돌봄 조회
+    PARTNER,        // 펫시터 - 프로필/자격 관리, 예약 수락/거절, 돌봄 일지
+    ADMIN,          // 관리자 - 일반 관리 기능
+    SUPER_ADMIN     // 최고 관리자 - 전체 시스템 관리
 }
 ```
 
 ### 권한 매트릭스
 
-| 리소스 | CUSTOMER | COMPANY_ADMIN | SUPPLIER_ADMIN | PLATFORM_ADMIN |
-|--------|----------|---------------|----------------|----------------|
+| 리소스 | CUSTOMER | PARTNER | ADMIN | SUPER_ADMIN |
+|--------|----------|---------|-------|-------------|
 | 사용자 (본인) | RU | RU | RU | CRUD |
-| 사용자 (전체) | - | - | - | CRUD |
-| 장례업체 | R | RU (본인) | R | CRUD |
-| 공급사 | R | R | RU (본인) | CRUD |
-| 상품 | R | R | CRU (본인) | CRUD |
-| 예약 | CRU (본인) | RU | - | CRUD |
-| 주문 | CRU (본인) | R | R (본인) | CRUD |
-| 정산 | - | R (본인) | R (본인) | CRUD |
+| 사용자 (전체) | - | - | CRUD | CRUD |
+| 예약 | CRU (본인) | RU (본인) | CRUD | CRUD |
+| 돌봄 일지 | R (본인) | CRU (본인) | R | CRUD |
+| 정산 | - | R (본인) | CRUD | CRUD |
+| 후기 | CRU (본인) | R | R | CRUD |
 
 ### Spring Security 설정
 
@@ -124,15 +122,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
 
                 // Admin only
-                .requestMatchers("/api/v1/admin/**").hasRole("PLATFORM_ADMIN")
+                .requestMatchers("/api/v1/admin/**")
+                    .hasAnyRole("ADMIN", "SUPER_ADMIN")
 
-                // Supplier only
-                .requestMatchers("/api/v1/suppliers/*/products/**")
-                    .hasAnyRole("SUPPLIER_ADMIN", "PLATFORM_ADMIN")
+                // Partner only
+                .requestMatchers("/api/v1/partner/**")
+                    .hasAnyRole("PARTNER", "ADMIN", "SUPER_ADMIN")
 
                 // Authenticated
                 .anyRequest().authenticated()
@@ -147,23 +144,23 @@ public class SecurityConfig {
 
 ```java
 @Service
-public class OrderService {
+public class BookingService {
 
     @PreAuthorize("hasRole('CUSTOMER') and #userId == authentication.principal.id")
-    public Order createOrder(Long userId, OrderCreateRequest request) {
-        // 본인만 주문 생성 가능
+    public Booking createBooking(Long userId, BookingCreateRequest request) {
+        // 반려인만 예약 생성 가능
     }
 
-    @PreAuthorize("@orderSecurity.canAccess(#orderId)")
-    public Order getOrder(Long orderId) {
+    @PreAuthorize("@bookingSecurity.canAccess(#bookingId)")
+    public Booking getBooking(Long bookingId) {
         // 커스텀 보안 로직
     }
 }
 
 @Component
-public class OrderSecurity {
-    public boolean canAccess(Long orderId) {
-        // 본인 주문이거나 관리자인지 확인
+public class BookingSecurity {
+    public boolean canAccess(Long bookingId) {
+        // 본인 예약이거나 관리자인지 확인
     }
 }
 ```
@@ -308,8 +305,8 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-            "https://findplace.com",
-            "https://admin.findplace.com"
+            "https://petpro.com",
+            "https://admin.petpro.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
@@ -437,6 +434,119 @@ public Order createOrder(OrderCreateRequest request) {
 
 ---
 
+## 시크릿 관리 (필수)
+
+### 환경변수 필수 사용 규칙
+
+**모든 시크릿(비밀키, 크레덴셜)은 반드시 환경변수로 관리해야 합니다.**
+
+| 항목 | 환경변수 | 기본값 허용 |
+|------|---------|------------|
+| JWT Secret | `JWT_SECRET` | ❌ 기본값 없음 (필수 설정) |
+| OAuth Client ID | `GOOGLE_CLIENT_ID`, `KAKAO_CLIENT_ID`, `NAVER_CLIENT_ID` | ❌ 빈 문자열만 허용 |
+| OAuth Client Secret | `GOOGLE_CLIENT_SECRET`, `KAKAO_CLIENT_SECRET`, `NAVER_CLIENT_SECRET` | ❌ 빈 문자열만 허용 |
+| DB Password | `DB_PASSWORD` | ❌ 운영 환경에서 금지 |
+
+```yaml
+# Bad - 하드코딩 (절대 금지)
+app:
+  jwt:
+    secret: your-jwt-secret-key-must-be-at-least-256-bits
+  oauth:
+    google:
+      client-id: 141536358954-xxxxx.apps.googleusercontent.com
+      client-secret: GOCSPX-xxxxx
+
+# Good - 환경변수 참조
+app:
+  jwt:
+    secret: ${JWT_SECRET}  # 기본값 없음 → 미설정 시 앱 시작 실패
+  oauth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
+```
+
+### 프로필별 설정 원칙
+
+- `application.yml`: 환경변수 참조만 사용 (기본값은 빈 문자열 또는 없음)
+- `application-local.yml`: 환경변수 참조 사용 (개발 편의를 위한 기본값 허용하되, 실제 시크릿 하드코딩 금지)
+- `.env` 파일: `.gitignore`에 포함, 실제 시크릿 저장
+
+---
+
+## IDOR 방지 (필수)
+
+### 리소스 접근 제어 규칙
+
+**모든 사용자 ID 기반 조회 엔드포인트는 접근 제어가 필수입니다.**
+
+```java
+// Bad - IDOR 취약 (누구나 다른 사용자 정보 조회 가능)
+@GetMapping("/{id}")
+public ResponseEntity<ApiResponse<UserResponse.Info>> getUser(@PathVariable Long id) {
+    return ResponseEntity.ok(ApiResponse.success(userService.getUser(id)));
+}
+
+// Good - 본인 또는 관리자만 접근 가능
+@GetMapping("/{id}")
+@PreAuthorize("hasRole('ADMIN') or #id == T(Long).parseLong(authentication.name)")
+public ResponseEntity<ApiResponse<UserResponse.Info>> getUser(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails) {
+    return ResponseEntity.ok(ApiResponse.success(userService.getUser(id)));
+}
+```
+
+### 관리자 컨트롤러 userId 추출
+
+```java
+// Bad - 하드코딩
+private Long extractUserId(UserDetails userDetails) {
+    return 1L; // 임시 값
+}
+
+// Good - UserDetails에서 추출
+private Long extractUserId(UserDetails userDetails) {
+    return Long.parseLong(userDetails.getUsername());
+}
+```
+
+---
+
+## 파일 업로드 보안 (필수)
+
+### 파일 업로드 검증 규칙
+
+| 검증 항목 | 규칙 |
+|-----------|------|
+| 파일 크기 | 최대 5MB |
+| 허용 타입 | `image/jpeg`, `image/png`, `image/gif`, `image/webp` |
+| 파일명 | UUID로 재생성 (원본 파일명 사용 금지) |
+| 빈 파일 | 거부 |
+
+```java
+// 필수 검증 로직
+private void validateProfileImage(MultipartFile file) {
+    if (file.isEmpty()) {
+        throw new BusinessException(ErrorCode.INVALID_INPUT);
+    }
+    if (file.getSize() > 5 * 1024 * 1024) {
+        throw new BusinessException(ErrorCode.FILE_TOO_LARGE);
+    }
+    String contentType = file.getContentType();
+    if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
+        throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+    }
+}
+
+// 파일명 새니타이징 (UUID 사용)
+String extension = getExtension(file.getOriginalFilename());
+String safeFileName = UUID.randomUUID() + "." + extension;
+```
+
+---
+
 ## 보안 체크리스트
 
 ### 개발 단계
@@ -447,6 +557,9 @@ public Order createOrder(OrderCreateRequest request) {
 - [ ] CSRF 방지
 - [ ] 민감정보 암호화/마스킹
 - [ ] 적절한 에러 메시지 (정보 노출 방지)
+- [ ] 시크릿 하드코딩 금지 (환경변수 사용)
+- [ ] IDOR 방지 (리소스 접근 제어)
+- [ ] 파일 업로드 타입/크기 검증
 
 ### 배포 단계
 

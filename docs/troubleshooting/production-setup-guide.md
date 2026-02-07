@@ -1,6 +1,6 @@
 # 실서비스 환경 세팅 가이드
 
-이 문서는 FindPlace 프로젝트를 새로운 서버에 배포할 때 발생할 수 있는 문제들과 해결 방법을 정리한 가이드입니다.
+이 문서는 PetPro 프로젝트를 새로운 서버에 배포할 때 발생할 수 있는 문제들과 해결 방법을 정리한 가이드입니다.
 
 ## 목차
 
@@ -33,8 +33,8 @@
 
 ```bash
 cd /home
-git clone https://github.com/<your-username>/findplace.git
-cd findplace
+git clone https://github.com/<your-username>/petpro.git
+cd petpro
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -145,8 +145,8 @@ minio-init:
 
 **증상:**
 ```
-WARN[0000] Found multiple config files with supported names: /home/findplace/compose.yaml, /home/findplace/docker-compose.yml
-WARN[0000] Using /home/findplace/compose.yaml
+WARN[0000] Found multiple config files with supported names: /home/petpro/compose.yaml, /home/petpro/docker-compose.yml
+WARN[0000] Using /home/petpro/compose.yaml
 ```
 
 **원인:** `compose.yaml`과 `docker-compose.yml` 두 파일이 모두 존재
@@ -163,14 +163,14 @@ rm -f compose.yaml
 
 **증상:**
 ```
-Error: Unable to access jarfile /home/findplace/backend/gradle/wrapper/gradle-wrapper.jar
+Error: Unable to access jarfile /home/petpro/backend/gradle/wrapper/gradle-wrapper.jar
 ```
 
 **원인:** `.gitignore`에 의해 `gradle-wrapper.jar`가 git에 포함되지 않음
 
 **해결 방법 1 - 서버에서 Gradle 설치:**
 ```bash
-cd /home/findplace/backend
+cd /home/petpro/backend
 
 # Gradle 다운로드 및 설치
 wget https://services.gradle.org/distributions/gradle-8.7-bin.zip
@@ -184,7 +184,7 @@ gradle wrapper
 **해결 방법 2 - 로컬에서 JAR 파일 push:**
 ```bash
 # 로컬 개발 환경에서
-cd /path/to/findplace
+cd /path/to/petpro
 git add -f backend/gradle/wrapper/gradle-wrapper.jar
 git commit -m "Add gradle wrapper jar"
 git push
@@ -207,7 +207,7 @@ Invalid options object. Dev Server has been initialized using an options object 
 
 **해결:**
 ```bash
-cd /home/findplace/frontend
+cd /home/petpro/frontend
 
 # .env 파일 생성
 cat > .env << 'EOF'
@@ -217,7 +217,7 @@ WDS_SOCKET_HOST=0.0.0.0
 EOF
 
 # 프론트엔드 재시작
-nohup npm start > /tmp/findplace-frontend.log 2>&1 &
+nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 ```
 
 ---
@@ -234,7 +234,7 @@ Module not found: Error: Can't resolve './dom-utils/getCompositeRect.js'
 
 **해결:**
 ```bash
-cd /home/findplace/frontend
+cd /home/petpro/frontend
 
 # 기존 삭제
 rm -rf node_modules package-lock.json
@@ -243,7 +243,7 @@ rm -rf node_modules package-lock.json
 npm install
 
 # 다시 실행
-nohup npm start > /tmp/findplace-frontend.log 2>&1 &
+nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 ```
 
 ---
@@ -296,23 +296,23 @@ systemctl stop firewalld
 
 **인프라 (Docker):**
 ```bash
-cd /home/findplace
+cd /home/petpro
 docker-compose up -d
 ```
 
 **백엔드:**
 ```bash
-cd /home/findplace/backend
+cd /home/petpro/backend
 chmod +x gradlew
 ./gradlew build -x test
-nohup ./gradlew bootRun > /tmp/findplace-backend.log 2>&1 &
+nohup ./gradlew bootRun > /tmp/petpro-backend.log 2>&1 &
 ```
 
 **프론트엔드:**
 ```bash
-cd /home/findplace/frontend
+cd /home/petpro/frontend
 npm install
-nohup npm start > /tmp/findplace-frontend.log 2>&1 &
+nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 ```
 
 ---
@@ -344,16 +344,16 @@ dnf install -y epel-release
 dnf install -y certbot
 
 # nginx 컨테이너 중지 후 인증서 발급 (80 포트 사용)
-docker stop findplace-nginx
+docker stop petpro-nginx
 certbot certonly --standalone -d dev.findplace.co.kr -m your@email.com --agree-tos
-docker start findplace-nginx
+docker start petpro-nginx
 ```
 
 ### 6.2 SSL 설정 적용
 
 ```bash
 # 프로젝트 디렉토리로 이동
-cd /home/findplace
+cd /home/petpro
 
 # SSL 설정 파일 활성화 (템플릿 복사)
 cp docker/nginx/conf.d/ssl.conf.prod docker/nginx/conf.d/ssl.conf
@@ -371,14 +371,14 @@ Let's Encrypt 인증서는 90일 후 만료되므로 자동 갱신 설정 필요
 crontab -e
 
 # 아래 내용 추가 (매일 새벽 3시 갱신 시도)
-0 3 * * * certbot renew --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx' >> /var/log/certbot-renew.log 2>&1
+0 3 * * * certbot renew --pre-hook 'docker stop petpro-nginx' --post-hook 'docker start petpro-nginx' >> /var/log/certbot-renew.log 2>&1
 ```
 
 ### 6.4 갱신 테스트
 
 ```bash
 # 실제 갱신 없이 테스트 (dry-run)
-certbot renew --dry-run --pre-hook 'docker stop findplace-nginx' --post-hook 'docker start findplace-nginx'
+certbot renew --dry-run --pre-hook 'docker stop petpro-nginx' --post-hook 'docker start petpro-nginx'
 
 # 인증서 만료일 확인
 certbot certificates
@@ -418,34 +418,34 @@ firewall-cmd --reload
 ### 백엔드 로그
 ```bash
 # 실시간 로그
-tail -f /tmp/findplace-backend.log
+tail -f /tmp/petpro-backend.log
 
 # 최근 100줄
-tail -100 /tmp/findplace-backend.log
+tail -100 /tmp/petpro-backend.log
 
 # 에러만 확인
-grep -i "error\|exception" /tmp/findplace-backend.log
+grep -i "error\|exception" /tmp/petpro-backend.log
 ```
 
 ### 프론트엔드 로그
 ```bash
 # 실시간 로그
-tail -f /tmp/findplace-frontend.log
+tail -f /tmp/petpro-frontend.log
 
 # 최근 100줄
-tail -100 /tmp/findplace-frontend.log
+tail -100 /tmp/petpro-frontend.log
 ```
 
 ### Docker 컨테이너 로그
 ```bash
 # PostgreSQL
-docker logs findplace-postgres-master
+docker logs petpro-postgres-master
 
 # Redis
-docker logs findplace-redis
+docker logs petpro-redis
 
 # MinIO
-docker logs findplace-minio
+docker logs petpro-minio
 ```
 
 ### 서비스 상태 확인

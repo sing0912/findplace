@@ -44,8 +44,8 @@
 ### Backend (Spring Boot)
 
 ```
-src/main/java/com/findplace/
-├── FindPlaceApplication.java
+src/main/java/com/petpro/
+├── PetProApplication.java
 ├── common/                      # 공통 모듈
 │   ├── config/                  # 설정
 │   ├── exception/               # 예외
@@ -165,8 +165,8 @@ DB_SLAVE1_HOST=localhost
 DB_SLAVE1_PORT=5433
 DB_SLAVE2_HOST=localhost
 DB_SLAVE2_PORT=5434
-DB_NAME=findplace
-DB_USERNAME=findplace
+DB_NAME=petpro
+DB_USERNAME=petpro
 DB_PASSWORD=secret
 
 # Redis

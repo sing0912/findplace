@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# FindPlace 전체 서비스 중지 스크립트
+# PetPro 전체 서비스 중지 스크립트
 # ============================================================
 
 set -e
@@ -15,13 +15,13 @@ NC='\033[0m'
 
 echo -e "${RED}"
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║           FindPlace - 전체 서비스 중지                    ║"
+echo "║           PetPro - 전체 서비스 중지                    ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
 # Java 프로세스 종료 (Spring Boot)
 echo -e "${GREEN}[1/3]${NC} Backend 프로세스 종료 중..."
-pkill -f "findplace" 2>/dev/null || true
+pkill -f "petpro" 2>/dev/null || true
 pkill -f "spring-boot" 2>/dev/null || true
 
 # Node 프로세스 종료 (React)

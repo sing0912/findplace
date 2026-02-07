@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-FindPlace 시스템은 두 개의 PostgreSQL 데이터베이스를 사용합니다.
+PetPro 시스템은 두 개의 PostgreSQL 데이터베이스를 사용합니다.
 
 | DB | 용도 | 포트 | 비고 |
 |----|------|------|------|
@@ -573,19 +573,19 @@ spring:
   datasource:
     main:
       master:
-        url: jdbc:postgresql://localhost:5432/findplace
-        username: findplace
+        url: jdbc:postgresql://localhost:5432/petpro
+        username: petpro
         password: ${MAIN_DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
       slave:
-        url: jdbc:postgresql://localhost:5433/findplace,jdbc:postgresql://localhost:5434/findplace
-        username: findplace
+        url: jdbc:postgresql://localhost:5433/petpro,jdbc:postgresql://localhost:5434/petpro
+        username: petpro
         password: ${MAIN_DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
 
     coupon:
-      url: jdbc:postgresql://localhost:5435/findplace_coupon
-      username: findplace
+      url: jdbc:postgresql://localhost:5435/petpro_coupon
+      username: petpro
       password: ${COUPON_DB_PASSWORD}
       driver-class-name: org.postgresql.Driver
 
@@ -641,7 +641,7 @@ public class CouponDataSourceConfig {
     public LocalContainerEntityManagerFactoryBean couponEntityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(couponDataSource());
-        em.setPackagesToScan("com.findplace.coupon.domain");
+        em.setPackagesToScan("com.petpro.coupon.domain");
         // ...
         return em;
     }
@@ -659,13 +659,13 @@ public class CouponDataSourceConfig {
 # backup.sh
 
 DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR=/backup/findplace
+BACKUP_DIR=/backup/petpro
 
 # Main DB 백업
-pg_dump -h localhost -p 5432 -U findplace -F c findplace > $BACKUP_DIR/main_$DATE.dump
+pg_dump -h localhost -p 5432 -U petpro -F c petpro > $BACKUP_DIR/main_$DATE.dump
 
 # Coupon DB 백업
-pg_dump -h localhost -p 5435 -U findplace -F c findplace_coupon > $BACKUP_DIR/coupon_$DATE.dump
+pg_dump -h localhost -p 5435 -U petpro -F c petpro_coupon > $BACKUP_DIR/coupon_$DATE.dump
 
 # 7일 이상 된 백업 삭제
 find $BACKUP_DIR -name "*.dump" -mtime +7 -delete
@@ -679,7 +679,7 @@ find $BACKUP_DIR -name "*.dump" -mtime +7 -delete
 
 BACKUP_FILE=$1
 
-pg_restore -h localhost -p 5432 -U findplace -d findplace -c $BACKUP_FILE
+pg_restore -h localhost -p 5432 -U petpro -d petpro -c $BACKUP_FILE
 ```
 
 ---

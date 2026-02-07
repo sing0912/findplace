@@ -1,8 +1,14 @@
 # 알림 (Notification)
 
+**최종 수정일:** 2026-02-07
+**상태:** 확정
+
+---
+
 ## 개요
 
 푸시 알림, SMS, 이메일 발송을 관리하는 도메인입니다.
+PetPro 플랫폼의 예약, 돌봄, 채팅, 결제, 리뷰, 시스템, 마케팅 관련 알림을 통합 처리합니다.
 
 ---
 
@@ -18,7 +24,7 @@
 | channel | Enum | 발송 채널 | Not Null |
 | title | String | 제목 | Not Null |
 | content | Text | 내용 | Not Null |
-| data | JSON | 추가 데이터 | Nullable |
+| data | JSON | 추가 데이터 (딥링크 등) | Nullable |
 | isRead | Boolean | 읽음 여부 | Default false |
 | readAt | DateTime | 읽음 시간 | Nullable |
 | sentAt | DateTime | 발송 시간 | Nullable |
@@ -28,20 +34,19 @@
 
 | 값 | 설명 |
 |----|------|
-| RESERVATION | 예약 관련 |
-| ORDER | 주문 관련 |
-| DELIVERY | 배송 관련 |
-| PAYMENT | 결제 관련 |
-| MEMORIAL | 추모관 관련 |
-| COLUMBARIUM | 봉안당 관련 |
+| BOOKING | 예약 관련 (예약 확정/취소/변경 등) |
+| CARE | 돌봄 관련 (돌봄 시작/종료, 일지 등록 등) |
+| CHAT | 채팅 관련 (새 메시지 등) |
+| PAYMENT | 결제 관련 (결제 완료/환불 등) |
+| REVIEW | 리뷰 관련 (리뷰 요청/등록 알림) |
 | SYSTEM | 시스템 공지 |
-| MARKETING | 마케팅 |
+| MARKETING | 마케팅 (이벤트/쿠폰 등) |
 
 ### NotificationChannel
 
 | 값 | 설명 |
 |----|------|
-| PUSH | 앱 푸시 |
+| PUSH | 앱 푸시 (FCM) |
 | SMS | 문자 |
 | KAKAO | 카카오 알림톡 |
 | EMAIL | 이메일 |
@@ -135,8 +140,9 @@
 
 ```
 안녕하세요, {{userName}}님.
-{{petName}}의 장례 예약이 확정되었습니다.
-예약일시: {{reservationDateTime}}
+{{petName}}의 돌봄 예약이 확정되었습니다.
+시터: {{sitterName}}
+예약일시: {{bookingDateTime}}
 ```
 
 ### 주요 변수
@@ -145,10 +151,54 @@
 |------|------|
 | {{userName}} | 사용자 이름 |
 | {{petName}} | 반려동물 이름 |
-| {{companyName}} | 업체명 |
-| {{reservationDateTime}} | 예약 일시 |
-| {{orderNumber}} | 주문번호 |
-| {{trackingNumber}} | 운송장 번호 |
+| {{sitterName}} | 시터 이름 |
+| {{bookingDateTime}} | 예약 일시 |
+| {{bookingNumber}} | 예약 번호 |
+| {{bookingStatus}} | 예약 상태 |
+| {{paymentAmount}} | 결제 금액 |
+| {{careStartTime}} | 돌봄 시작 시간 |
+| {{careEndTime}} | 돌봄 종료 시간 |
+
+---
+
+## FCM 딥링크
+
+PetPro 앱 내 화면으로 직접 이동하기 위한 딥링크 스키마입니다.
+알림의 `data` 필드에 딥링크 URL을 포함하여 전송합니다.
+
+### 스키마
+
+```
+petpro://{path}
+```
+
+### 딥링크 목록
+
+| NotificationType | 딥링크 | 설명 |
+|------------------|--------|------|
+| BOOKING | `petpro://reservation/{id}` | 예약 상세 화면 |
+| CARE | `petpro://care/{id}` | 돌봄 일지 상세 화면 |
+| CHAT | `petpro://chat/{chatRoomId}` | 채팅방 화면 |
+| PAYMENT | `petpro://payment/{id}` | 결제 상세 화면 |
+| REVIEW | `petpro://review/{bookingId}` | 리뷰 작성/상세 화면 |
+| SYSTEM | `petpro://notice/{id}` | 공지사항 상세 화면 |
+| MARKETING | `petpro://event/{id}` | 이벤트 상세 화면 |
+
+### FCM 페이로드 예시
+
+```json
+{
+  "notification": {
+    "title": "예약이 확정되었습니다",
+    "body": "2월 10일 14:00 돌봄 예약이 확정되었습니다."
+  },
+  "data": {
+    "type": "BOOKING",
+    "deepLink": "petpro://reservation/12345",
+    "notificationId": "67890"
+  }
+}
+```
 
 ---
 
@@ -192,6 +242,8 @@
 2. 야간 시간대(21:00~08:00) 마케팅 발송 제한
 3. 발송 실패 시 3회까지 재시도
 4. 대량 발송은 승인 후 처리
+5. 돌봄 시작/종료 알림은 반려인(CUSTOMER)에게 자동 발송
+6. 예약 상태 변경 시 관련 당사자(반려인/시터) 모두에게 알림 발송
 
 ---
 

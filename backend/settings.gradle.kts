@@ -1,1 +1,1 @@
-rootProject.name = "findplace-backend"
+rootProject.name = "petpro-backend"

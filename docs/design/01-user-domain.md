@@ -2,7 +2,7 @@
 
 ## 1. 개요
 
-회원(User) 도메인은 FindPlace 플랫폼의 핵심 도메인으로, 사용자 인증/인가, 프로필 관리, 주소 기반 서비스를 담당합니다.
+회원(User) 도메인은 PetPro 플랫폼의 핵심 도메인으로, 사용자 인증/인가, 프로필 관리, 주소 기반 서비스를 담당합니다.
 
 ---
 
@@ -150,7 +150,7 @@
   "longitude": 127.0536,
   "role": "USER",
   "status": "ACTIVE",
-  "profileImageUrl": "https://storage.findplace.com/profiles/1.jpg",
+  "profileImageUrl": "https://storage.petpro.com/profiles/1.jpg",
   "lastLoginAt": "2025-01-25T09:30:00",
   "createdAt": "2025-01-20T14:30:00",
   "updatedAt": "2025-01-25T10:00:00"
@@ -167,7 +167,7 @@
   "address": "서울특별시 강남구 테헤란로 123",
   "addressDetail": "101동 202호",
   "zipCode": "06141",
-  "profileImageUrl": "https://storage.findplace.com/profiles/1.jpg"
+  "profileImageUrl": "https://storage.petpro.com/profiles/1.jpg"
 }
 ```
 

@@ -22,21 +22,21 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:8080']
         labels:
-          application: 'findplace-backend'
+          application: 'petpro-backend'
 
   # Redis 메트릭 (redis_exporter 사용 시)
   - job_name: 'redis'
     static_configs:
       - targets: ['redis:6379']
         labels:
-          application: 'findplace-redis'
+          application: 'petpro-redis'
 
   # PostgreSQL 메트릭 (postgres_exporter 사용 시)
   - job_name: 'postgres'
     static_configs:
       - targets: ['postgres-master:5432']
         labels:
-          application: 'findplace-postgres'
+          application: 'petpro-postgres'
 
   # Loki 메트릭
   - job_name: 'loki'

@@ -21,9 +21,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
     -- 스키마 생성
-    CREATE SCHEMA IF NOT EXISTS findplace;
+    CREATE SCHEMA IF NOT EXISTS petpro;
 
-    GRANT ALL PRIVILEGES ON SCHEMA findplace TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON SCHEMA petpro TO $POSTGRES_USER;
 EOSQL
 
 echo "PostgreSQL Master initialization completed."
