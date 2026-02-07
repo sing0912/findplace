@@ -430,6 +430,15 @@ start_services() {
     # 인프라 상태 확인
     check_infrastructure
 
+    # 쿠폰 DB 자동 생성 (없는 경우)
+    RUNTIME=$(get_container_runtime)
+    if ! $RUNTIME exec petpro-postgres-coupon psql -U coupon -d petpro_coupon -c "SELECT 1" &>/dev/null; then
+        print_info "쿠폰 DB(petpro_coupon) 생성 중..."
+        $RUNTIME exec petpro-postgres-coupon psql -U coupon -d postgres -c "CREATE DATABASE petpro_coupon OWNER coupon;" \
+            && print_success "쿠폰 DB 생성 완료" \
+            || print_warning "쿠폰 DB 생성 실패 - 수동 확인 필요"
+    fi
+
     # 2. 백엔드 시작 (환경 변수는 이미 export됨)
     print_info "백엔드 빌드 및 시작 중..."
 

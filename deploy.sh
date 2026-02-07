@@ -106,6 +106,16 @@ log "인프라 준비 대기 중 (40초)..."
 sleep 40
 
 # ----------------------------------------
+# 쿠폰 DB 자동 생성 (없는 경우)
+# ----------------------------------------
+if ! docker exec petpro-postgres-coupon psql -U coupon -d petpro_coupon -c "SELECT 1" &>/dev/null; then
+    log "쿠폰 DB(petpro_coupon) 생성 중..."
+    docker exec petpro-postgres-coupon psql -U coupon -d postgres -c "CREATE DATABASE petpro_coupon OWNER coupon;" \
+        && log "쿠폰 DB 생성 완료" \
+        || warn "쿠폰 DB 생성 실패 - 수동 확인 필요"
+fi
+
+# ----------------------------------------
 # 백엔드 실행
 # ----------------------------------------
 log "백엔드 시작 중..."
