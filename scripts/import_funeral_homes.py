@@ -11,7 +11,7 @@
     DB_PORT: PostgreSQL 포트 (기본: 5432)
     DB_NAME: 데이터베이스 이름 (기본: petpro)
     DB_USER: 사용자 (기본: petpro)
-    DB_PASSWORD: 비밀번호 (기본: petpro123!)
+    DB_PASSWORD: 비밀번호 (필수, .env 파일 참고)
 """
 
 import csv
@@ -133,7 +133,7 @@ def import_to_db(records):
         'port': os.environ.get('DB_PORT', '5432'),
         'dbname': os.environ.get('DB_NAME', 'petpro'),
         'user': os.environ.get('DB_USER', 'petpro'),
-        'password': os.environ.get('DB_PASSWORD', 'petpro123!'),
+        'password': os.environ.get('DB_PASSWORD', ''),
     }
 
     print(f"DB 연결: {db_config['host']}:{db_config['port']}/{db_config['dbname']}")

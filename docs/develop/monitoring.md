@@ -24,7 +24,7 @@ PetPro는 Grafana 기반의 풀스택 관제 시스템을 사용합니다.
 
 | 서비스 | URL | 인증 |
 |--------|-----|------|
-| Grafana | http://localhost:3001 | admin / admin123! |
+| Grafana | http://localhost:3001 | admin / `${GRAFANA_ADMIN_PASSWORD}` |
 | Prometheus | http://localhost:9090 | - |
 
 ## 3. 아키텍처

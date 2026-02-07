@@ -167,7 +167,7 @@ DB_SLAVE2_HOST=localhost
 DB_SLAVE2_PORT=5434
 DB_NAME=petpro
 DB_USERNAME=petpro
-DB_PASSWORD=secret
+DB_PASSWORD=your-secure-password
 
 # Redis
 REDIS_HOST=localhost
@@ -176,10 +176,10 @@ REDIS_PORT=6379
 # MinIO
 MINIO_ENDPOINT=http://localhost:9000
 MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
+MINIO_SECRET_KEY=your-minio-secret-key
 
 # JWT
-JWT_SECRET=your-secret-key
+JWT_SECRET=your-jwt-secret-key-at-least-256-bits
 JWT_EXPIRATION=3600
 ```
 

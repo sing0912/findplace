@@ -46,7 +46,7 @@
 | 이미지 | mysql:8.0 |
 | 포트 | ${LOG_DB_MASTER_PORT:-3306}:3306 |
 | DB명 | petpro_log |
-| 사용자 | loguser / logpass123! |
+| 사용자 | ${LOG_DB_USERNAME} / ${LOG_DB_PASSWORD} |
 | 특성 | binlog, GTID, ROW format, utf8mb4 |
 
 ### MySQL Slave
@@ -79,7 +79,7 @@ log:
     master:
       jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_MASTER_PORT:3306}/petpro_log
       username: ${LOG_DB_USERNAME:loguser}
-      password: ${LOG_DB_PASSWORD:logpass123!}
+      password: ${LOG_DB_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: log-master-pool
@@ -88,7 +88,7 @@ log:
     slave:
       jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_SLAVE_PORT:3307}/petpro_log
       username: ${LOG_DB_USERNAME:loguser}
-      password: ${LOG_DB_PASSWORD:logpass123!}
+      password: ${LOG_DB_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: log-slave-pool

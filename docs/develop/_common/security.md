@@ -451,7 +451,7 @@ public Order createOrder(OrderCreateRequest request) {
 # Bad - 하드코딩 (절대 금지)
 app:
   jwt:
-    secret: your-jwt-secret-key-must-be-at-least-256-bits
+    secret: hardcoded-secret-here  # 절대 금지!
   oauth:
     google:
       client-id: 141536358954-xxxxx.apps.googleusercontent.com

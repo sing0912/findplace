@@ -518,15 +518,15 @@ public void onReviewWrite(ReviewWriteEvent event) {
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/petpro
-    username: petpro
-    password: petpro123!
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:petpro}
+    username: ${DB_USERNAME:petpro}
+    password: ${DB_PASSWORD}
 
 coupon:
   datasource:
     url: jdbc:postgresql://localhost:5435/petpro_coupon
-    username: coupon
-    password: coupon123!
+    username: ${COUPON_DB_USERNAME:coupon}
+    password: ${COUPON_DB_PASSWORD}
 ```
 
 ### 9.2 DataSource 설정

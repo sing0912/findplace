@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-petpro}
       POSTGRES_USER: ${DB_USERNAME:-petpro}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-petpro123!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
@@ -40,9 +40,9 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-petpro}
       POSTGRES_USER: ${DB_USERNAME:-petpro}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-petpro123!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGUSER: replicator
-      PGPASSWORD: replicator123!
+      PGPASSWORD: ${REPLICATOR_PASSWORD}
     volumes:
       - postgres-slave1-data:/var/lib/postgresql/data
       - ./docker/postgres/init-slave.sh:/init-slave.sh
@@ -79,9 +79,9 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-petpro}
       POSTGRES_USER: ${DB_USERNAME:-petpro}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-petpro123!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGUSER: replicator
-      PGPASSWORD: replicator123!
+      PGPASSWORD: ${REPLICATOR_PASSWORD}
     volumes:
       - postgres-slave2-data:/var/lib/postgresql/data
       - ./docker/postgres/init-slave.sh:/init-slave.sh
@@ -118,7 +118,7 @@ services:
     environment:
       POSTGRES_DB: petpro_coupon
       POSTGRES_USER: coupon
-      POSTGRES_PASSWORD: coupon123!
+      POSTGRES_PASSWORD: ${COUPON_DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     volumes:
       - postgres-coupon-data:/var/lib/postgresql/data
@@ -139,10 +139,10 @@ services:
     image: mysql:8.0
     container_name: petpro-mysql-log-master
     environment:
-      MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD:-root123!}
+      MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: petpro_log
       MYSQL_USER: ${LOG_DB_USERNAME:-loguser}
-      MYSQL_PASSWORD: ${LOG_DB_PASSWORD:-logpass123!}
+      MYSQL_PASSWORD: ${LOG_DB_PASSWORD}
     volumes:
       - mysql-log-master-data:/var/lib/mysql
       - ./docker/mysql-log/master/my.cnf:/etc/mysql/conf.d/my.cnf:ro
@@ -173,7 +173,7 @@ services:
     image: mysql:8.0
     container_name: petpro-mysql-log-slave
     environment:
-      MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD:-root123!}
+      MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: petpro_log
     volumes:
       - mysql-log-slave-data:/var/lib/mysql
@@ -205,7 +205,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: petpro-redis
-    command: redis-server --appendonly yes --requirepass redis123!
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
     ports:
@@ -213,7 +213,7 @@ services:
     networks:
       - petpro-network
     healthcheck:
-      test: redis-cli -a redis123! ping
+      test: redis-cli -a $${REDIS_PASSWORD} ping
       interval: 10s
       timeout: 5s
       retries: 5
@@ -226,7 +226,7 @@ services:
     container_name: petpro-minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123!}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     volumes:
       - minio-data:/data
     ports:
@@ -252,7 +252,7 @@ services:
         condition: service_healthy
     entrypoint: /bin/sh -c
     command: >
-      "mc alias set myminio http://minio:9000 minioadmin minioadmin123! &&
+      "mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
        mc mb myminio/petpro --ignore-existing &&
        mc anonymous set public myminio/petpro/public &&
        echo 'MinIO bucket initialized'"
@@ -372,7 +372,7 @@ services:
     container_name: petpro-grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123!
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_ROOT_URL: http://localhost:3001
     volumes:

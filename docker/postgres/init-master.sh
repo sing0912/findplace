@@ -10,7 +10,7 @@ echo "Initializing PostgreSQL Master..."
 # Replication 사용자 생성
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     -- Replication 사용자 생성
-    CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD 'replicator123!';
+    CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD '${REPLICATOR_PASSWORD}';
 
     -- Replication Slot 생성
     SELECT pg_create_physical_replication_slot('replica_slot_1');

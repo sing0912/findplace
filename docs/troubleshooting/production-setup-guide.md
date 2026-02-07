@@ -329,8 +329,8 @@ nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 | MinIO Console | http://1.234.5.95:9001 |
 
 ### MinIO 로그인 정보
-- Username: `minioadmin`
-- Password: `minioadmin123!`
+- Username: `.env` 파일의 `MINIO_ACCESS_KEY` 값
+- Password: `.env` 파일의 `MINIO_SECRET_KEY` 값
 
 ---
 

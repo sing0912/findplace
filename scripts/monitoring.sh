@@ -34,7 +34,7 @@ function start_monitoring() {
     $COMPOSE_CMD up -d $MONITORING_SERVICES
     echo ""
     echo "Services started. Access points:"
-    echo "  - Grafana:    http://localhost:3001 (admin / admin123!)"
+    echo "  - Grafana:    http://localhost:3001 (admin / \${GRAFANA_ADMIN_PASSWORD})"
     echo "  - Prometheus: http://localhost:9090"
     echo "  - Loki:       http://localhost:3100"
     echo "  - Tempo:      http://localhost:3200"

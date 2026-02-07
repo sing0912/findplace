@@ -92,7 +92,7 @@ start_postgres_containers() {
         $cmd run -d --name petpro-postgres-master \
             -e POSTGRES_DB=petpro \
             -e POSTGRES_USER=petpro \
-            -e POSTGRES_PASSWORD=petpro123! \
+            -e POSTGRES_PASSWORD="${DB_PASSWORD}" \
             -p 5432:5432 \
             postgres:16-alpine 2>&1
     fi
@@ -106,7 +106,7 @@ start_postgres_containers() {
         $cmd run -d --name petpro-postgres-coupon \
             -e POSTGRES_DB=petpro_coupon \
             -e POSTGRES_USER=coupon \
-            -e POSTGRES_PASSWORD=coupon123! \
+            -e POSTGRES_PASSWORD="${COUPON_DB_PASSWORD}" \
             -p 5435:5432 \
             postgres:16-alpine 2>&1
     fi

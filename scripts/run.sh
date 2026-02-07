@@ -189,7 +189,7 @@ cmd_db_shell() {
 
 cmd_redis_shell() {
     print_info "Redis 접속 중..."
-    run_container exec -it petpro-redis redis-cli -a redis123!
+    run_container exec -it petpro-redis redis-cli -a "${REDIS_PASSWORD}"
 }
 
 cmd_replication_status() {

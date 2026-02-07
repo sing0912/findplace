@@ -388,7 +388,7 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "your-password"
 }
 
 # 응답
@@ -412,37 +412,15 @@ Authorization: Bearer {accessToken}
 
 ### .env 파일
 
-```env
-# Database
-DB_HOST=localhost
-DB_NAME=petpro
-DB_USERNAME=petpro
-DB_PASSWORD=petpro123!
-DB_MASTER_PORT=5432
-DB_SLAVE1_PORT=5433
-DB_SLAVE2_PORT=5434
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=redis123!
-
-# JWT
-JWT_SECRET=your-jwt-secret-key-must-be-at-least-256-bits-long
-JWT_ACCESS_EXPIRATION=3600
-JWT_REFRESH_EXPIRATION=1209600
-
-# MinIO
-MINIO_ENDPOINT=http://localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin123!
-MINIO_BUCKET=petpro
-
-# Application
-APP_PORT=8080
-APP_ENV=local
-FRONTEND_URL=http://localhost:3000
+```bash
+# .env.example을 복사하여 실제 값을 설정하세요.
+cp .env.example .env
+# 반드시 모든 your-* 값을 실제 비밀번호로 변경해야 합니다.
 ```
+
+> **주의**: 비밀번호는 절대 소스코드에 하드코딩하지 마세요. `.env` 파일은 `.gitignore`에 포함되어 있습니다.
+
+필수 환경변수 목록은 `.env.example` 파일을 참고하세요.
 
 ---
 

@@ -27,7 +27,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:redis123!}
+      password: ${REDIS_PASSWORD}
       lettuce:
         pool:
           max-active: 8
@@ -72,7 +72,7 @@ app:
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
-    secret-key: ${MINIO_SECRET_KEY:minioadmin123!}
+    secret-key: ${MINIO_SECRET_KEY}
     bucket: ${MINIO_BUCKET:petpro}
 
   oauth:
@@ -114,7 +114,7 @@ datasource:
   master:
     jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_MASTER_PORT:5432}/${DB_NAME:petpro}
     username: ${DB_USERNAME:petpro}
-    password: ${DB_PASSWORD:petpro123!}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: master-pool
@@ -127,10 +127,10 @@ datasource:
     nodes:
       - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE1_PORT:5433}/${DB_NAME:petpro}
         username: ${DB_USERNAME:petpro}
-        password: ${DB_PASSWORD:petpro123!}
+        password: ${DB_PASSWORD}
       - jdbc-url: jdbc:postgresql://${DB_HOST:localhost}:${DB_SLAVE2_PORT:5434}/${DB_NAME:petpro}
         username: ${DB_USERNAME:petpro}
-        password: ${DB_PASSWORD:petpro123!}
+        password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: slave-pool
@@ -144,7 +144,7 @@ coupon:
   datasource:
     url: jdbc:postgresql://${COUPON_DB_HOST:localhost}:${COUPON_DB_PORT:5435}/petpro_coupon
     username: ${COUPON_DB_USERNAME:coupon}
-    password: ${COUPON_DB_PASSWORD:coupon123!}
+    password: ${COUPON_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: coupon-pool
@@ -159,7 +159,7 @@ log:
     master:
       jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_MASTER_PORT:3306}/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
       username: ${LOG_DB_USERNAME:loguser}
-      password: ${LOG_DB_PASSWORD:logpass123!}
+      password: ${LOG_DB_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: log-master-pool
@@ -170,7 +170,7 @@ log:
     slave:
       jdbc-url: jdbc:mysql://${LOG_DB_HOST:localhost}:${LOG_DB_SLAVE_PORT:3307}/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
       username: ${LOG_DB_USERNAME:loguser}
-      password: ${LOG_DB_PASSWORD:logpass123!}
+      password: ${LOG_DB_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: log-slave-pool

@@ -387,7 +387,7 @@ start_services() {
         echo -e "  ${GREEN}백엔드 API${NC}: http://localhost:8080/api"
         echo -e "  ${GREEN}Swagger UI${NC}: http://localhost:8080/api/swagger-ui.html"
     fi
-    echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001 (minioadmin / minioadmin123!)"
+    echo -e "  ${GREEN}MinIO Console${NC}: http://localhost:9001 (MINIO_ACCESS_KEY / MINIO_SECRET_KEY)"
     echo ""
     echo -e "  로그 확인:"
     echo -e "    백엔드: tail -f /tmp/petpro-backend.log"
@@ -411,7 +411,7 @@ check_infrastructure() {
     fi
 
     # Redis
-    if $RUNTIME exec petpro-redis redis-cli -a "redis123!" ping 2>/dev/null | grep -q "PONG"; then
+    if $RUNTIME exec petpro-redis redis-cli -a "${REDIS_PASSWORD}" ping 2>/dev/null | grep -q "PONG"; then
         print_success "Redis: 정상"
     else
         print_warning "Redis: 확인 필요"

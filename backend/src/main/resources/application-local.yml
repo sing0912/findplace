@@ -1,4 +1,5 @@
 # Local Development Profile
+# 실제 비밀번호는 .env 파일에서 관리
 spring:
   jpa:
     hibernate:
@@ -9,20 +10,20 @@ spring:
 datasource:
   slave:
     nodes:
-      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
-        username: petpro
-        password: petpro123!
-      - jdbc-url: jdbc:postgresql://localhost:5432/petpro
-        username: petpro
-        password: petpro123!
+      - jdbc-url: jdbc:postgresql://localhost:5432/${DB_NAME:petpro}
+        username: ${DB_USERNAME:petpro}
+        password: ${DB_PASSWORD}
+      - jdbc-url: jdbc:postgresql://localhost:5432/${DB_NAME:petpro}
+        username: ${DB_USERNAME:petpro}
+        password: ${DB_PASSWORD}
 
 # 로컬 개발 환경: Log DB Slave를 Master와 동일하게 설정
 log:
   datasource:
     slave:
       jdbc-url: jdbc:mysql://localhost:3306/petpro_log?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-      username: loguser
-      password: logpass123!
+      username: ${LOG_DB_USERNAME:loguser}
+      password: ${LOG_DB_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
 
 # OAuth 설정 (실제 크레덴셜은 .env 또는 환경변수로 관리)

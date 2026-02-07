@@ -177,7 +177,7 @@ db-shell-slave2:
 	$(CONTAINER_CMD) exec -it petpro-postgres-slave2 psql -U petpro -d petpro
 
 redis-shell:
-	$(CONTAINER_CMD) exec -it petpro-redis redis-cli -a redis123!
+	$(CONTAINER_CMD) exec -it petpro-redis redis-cli -a $${REDIS_PASSWORD}
 
 minio-ls:
 	$(CONTAINER_CMD) exec petpro-minio-init mc ls myminio/
