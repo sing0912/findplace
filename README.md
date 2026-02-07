@@ -18,7 +18,7 @@
 | Database | PostgreSQL (Master 1 + Slave 2) | PostgreSQL 16 |
 | Cache | Redis | Redis 7 |
 | Storage | MinIO (S3 호환) | MinIO |
-| Container | Docker, Docker Compose | - |
+| Container | Podman, Podman Compose (Docker 호환) | Podman 5.x |
 
 ---
 
@@ -219,16 +219,44 @@ petpro/
 | 예약 관리 | ⬜ 미구현 | /reservations |
 | 추모관 | ⬜ 미구현 | /memorial |
 
-### Infrastructure
+### Infrastructure (Podman Compose)
 
 | 서비스 | 상태 | 포트 | 설명 |
 | --- | --- | --- | --- |
 | PostgreSQL Master | ✅ | 5432 | 쓰기 DB |
 | PostgreSQL Slave 1 | ✅ | 5433 | 읽기 DB |
 | PostgreSQL Slave 2 | ✅ | 5434 | 읽기 DB |
+| PostgreSQL Coupon | ✅ | 5435 | 쿠폰 DB (별도) |
+| MySQL Log Master | ✅ | 3306 | 로그 DB (쓰기) |
+| MySQL Log Slave | ✅ | 3307 | 로그 DB (읽기) |
 | Redis | ✅ | 6379 | 캐시/세션 |
 | MinIO | ✅ | 9000, 9001 | 파일 저장소 |
 | Nginx | ✅ | 80, 443 | 리버스 프록시 (SSL) |
+
+---
+
+## 컨테이너 런타임
+
+이 프로젝트는 **Podman**을 컨테이너 런타임으로 사용합니다 (Docker 호환).
+
+### Podman 설치 (macOS)
+
+```bash
+brew install podman podman-compose
+podman machine init
+podman machine start
+```
+
+### 주요 차이점 (Docker vs Podman)
+
+| 항목 | Docker | Podman |
+|------|--------|--------|
+| 데몬 | dockerd 데몬 필요 | 데몬 없음 (rootless) |
+| 명령어 | `docker`, `docker-compose` | `podman`, `podman-compose` |
+| 소켓 | `/var/run/docker.sock` | `podman machine` 기반 |
+| 네트워크 | `bridge` 기본 | `slirp4netns` 기본 |
+
+> **참고**: `scripts/detect-runtime.sh`가 Docker/Podman을 자동 감지합니다.
 
 ---
 
@@ -259,18 +287,22 @@ make up
 ### 방법 3: 수동 실행
 
 ```bash
-# 1. Docker 인프라 시작
-docker-compose up -d
+# 1. 인프라 시작 (Podman)
+podman-compose up -d
 
-# 2. 백엔드 실행
+# 2. 환경변수 로드 후 백엔드 실행
+set -a && source .env && set +a
 cd backend
 ./gradlew bootRun
 
-# 3. 프론트엔드 실행
+# 3. 프론트엔드 실행 (별도 터미널)
 cd frontend
 npm install
 npm start
 ```
+
+> **중요**: 백엔드 실행 시 `.env` 파일을 반드시 source해야 합니다.
+> IDE(IntelliJ)에서 실행할 경우 EnvFile 플러그인으로 자동 로드됩니다.
 
 ---
 
@@ -428,18 +460,15 @@ cp .env.example .env
 
 ```bash
 # 백엔드 로그
-tail -f /tmp/petpro-backend.log
+tail -f backend/logs/petpro-backend.log
 
-# 프론트엔드 로그
-tail -f /tmp/petpro-frontend.log
-
-# Docker 컨테이너 로그
-docker logs petpro-postgres-master
-docker logs petpro-redis
-docker logs petpro-minio
+# Podman 컨테이너 로그
+podman logs petpro-postgres-master
+podman logs petpro-redis
+podman logs petpro-mysql-log-master
 
 # 에러만 확인
-grep -i "error\|exception" /tmp/petpro-backend.log
+grep -i "error\|exception" backend/logs/petpro-backend.log
 ```
 
 ---
@@ -448,10 +477,10 @@ grep -i "error\|exception" /tmp/petpro-backend.log
 
 | 역할 | 코드 | 설명 |
 | --- | --- | --- |
-| 일반 사용자 | ROLE_USER | 예약, 주문, 추모관 이용 |
-| 장례업체 관리자 | ROLE_COMPANY_ADMIN | 업체 관리, 예약/일정 관리 |
-| 공급사 관리자 | ROLE_SUPPLIER_ADMIN | 상품/재고/주문/정산 관리 |
-| 플랫폼 관리자 | ROLE_ADMIN | 전체 시스템 관리 |
+| 반려인 | CUSTOMER | 시터 검색, 예약, 결제, 돌봄 조회 |
+| 펫시터 | PARTNER | 프로필/자격 관리, 예약 수락/거절, 정산 |
+| 관리자 | ADMIN | 일반 관리 기능 |
+| 최고 관리자 | SUPER_ADMIN | 전체 시스템 관리 |
 
 ---
 

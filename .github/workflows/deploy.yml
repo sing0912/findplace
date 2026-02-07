@@ -1,0 +1,99 @@
+# ============================================================
+# PetPro 빌드 + Release 생성 워크플로우
+# - main push 또는 수동 실행 시 빌드 후 GitHub Release에 아티팩트 업로드
+# ============================================================
+
+name: 빌드 및 Release 생성
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------
+      # 소스 체크아웃
+      # ----------------------------------------
+      - name: 소스 체크아웃
+        uses: actions/checkout@v4
+
+      # ----------------------------------------
+      # Java 21 설정
+      # ----------------------------------------
+      - name: Java 21 설정
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # ----------------------------------------
+      # Gradle 캐시
+      # ----------------------------------------
+      - name: Gradle 캐시
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ----------------------------------------
+      # 백엔드 빌드 (테스트 스킵)
+      # ----------------------------------------
+      - name: 백엔드 빌드
+        working-directory: backend
+        run: ./gradlew clean bootJar -x test -x jacocoTestCoverageVerification
+
+      # ----------------------------------------
+      # Node.js 20 설정
+      # ----------------------------------------
+      - name: Node.js 20 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # ----------------------------------------
+      # 프론트엔드 빌드
+      # ----------------------------------------
+      - name: 프론트엔드 빌드
+        working-directory: frontend
+        env:
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ vars.REACT_APP_GOOGLE_CLIENT_ID }}
+        run: |
+          npm ci
+          npm run build
+          tar -czf ../frontend.tar.gz -C build .
+
+      # ----------------------------------------
+      # 아티팩트 준비
+      # ----------------------------------------
+      - name: 아티팩트 준비
+        run: |
+          cp backend/build/libs/*.jar backend.jar
+
+      # ----------------------------------------
+      # Release 생성
+      # ----------------------------------------
+      - name: Release 생성
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ github.run_number }}
+          name: Release #${{ github.run_number }}
+          body: |
+            커밋: ${{ github.sha }}
+            브랜치: ${{ github.ref_name }}
+            실행: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: |
+            backend.jar
+            frontend.tar.gz

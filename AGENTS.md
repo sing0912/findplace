@@ -162,7 +162,7 @@ AI 기반 반려동물 돌봄 서비스를 위한 토탈 플랫폼입니다.
 | Frontend | React, TypeScript |
 | Database | PostgreSQL (Master 1 + Slave 2) |
 | Cache | Redis |
-| Infrastructure | Docker Compose |
+| Container | Podman + Podman Compose (Docker 호환) |
 | File Storage | MinIO (S3 호환) |
 | Realtime | WebSocket (STOMP) |
 

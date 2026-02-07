@@ -227,6 +227,70 @@ cp .env.example .env
 
 ---
 
+## 배포 (GitHub Actions + Releases)
+
+### 개요
+
+서비스 서버 CPU/메모리 성능 제약으로 GitHub Actions에서 빌드 후 Release에 아티팩트 업로드,
+서버에서는 다운로드 + 실행만 수행하는 구조입니다.
+
+```
+로컬: git push origin main
+  → GitHub Actions: 빌드 (~2분) → Release 생성 (backend.jar + frontend.tar.gz)
+
+서버: ./deploy.sh
+  → 최신 Release 다운로드 → 배포 → 시작 (~30초)
+```
+
+### 파일 구성
+
+| 파일 | 설명 |
+|------|------|
+| `.github/workflows/deploy.yml` | GitHub Actions 빌드 + Release 생성 워크플로우 |
+| `deploy.sh` | 서버 배포 스크립트 (Release 다운로드 + 실행) |
+| `docker/nginx/conf.d-prod/ssl.conf` | 프론트엔드 정적 파일 서빙 (nginx) |
+| `docker-compose.prod.yml` | nginx에 `frontend/build` 볼륨 마운트 |
+
+### GitHub Actions 워크플로우
+
+- **트리거**: `main` 브랜치 push + `workflow_dispatch` (수동)
+- **환경**: `ubuntu-latest`, Java 21, Node.js 20
+- **빌드 순서**: 백엔드 JAR → 프론트엔드 build → Release 생성
+- **프론트엔드 환경변수**: GitHub Variables에서 `REACT_APP_GOOGLE_CLIENT_ID` 주입
+- **테스트**: `-x test -x jacocoTestCoverageVerification`으로 스킵 (CI에서 별도 실행)
+
+### 서버 배포 스크립트 (deploy.sh)
+
+1. `.env` 파일 로드 + 필수 변수 검증 (`GITHUB_REPO`)
+2. GitHub API로 최신 Release의 아티팩트 다운로드 (`backend.jar`, `frontend.tar.gz`)
+3. `frontend/build/`에 정적 파일 배포
+4. Docker 인프라 시작 (`docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`)
+5. `java -jar backend.jar` 백그라운드 실행 (환경 변수 export)
+6. nginx 컨테이너 재시작 (새 정적 파일 반영)
+
+### nginx 정적 파일 서빙
+
+프로덕션 환경에서는 프론트엔드를 dev server 대신 nginx로 정적 서빙합니다.
+
+- `frontend/build/` → nginx `/usr/share/nginx/html`로 마운트
+- `location /` → `root /usr/share/nginx/html; try_files $uri $uri/ /index.html;`
+- API, WebSocket, MinIO 프록시는 기존 유지
+
+### 사용자 초기 설정
+
+1. GitHub Settings → Actions → Variables에 `REACT_APP_GOOGLE_CLIENT_ID` 추가
+2. 서버 `.env`에 `GITHUB_REPO=sing0912/findplace` 추가
+3. 서버에 Java 21 JRE 설치 확인
+
+### 검증 체크리스트
+
+- [ ] GitHub Actions 빌드 성공 확인
+- [ ] Releases에 `backend.jar` + `frontend.tar.gz` 존재 확인
+- [ ] 서버에서 `./deploy.sh` 실행 → health check 통과
+- [ ] 프론트엔드 정적 페이지 정상 로드 확인
+
+---
+
 ## 다음 단계
 
 각 서브 지침을 순서대로 읽어주세요:
