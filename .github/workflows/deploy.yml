@@ -69,6 +69,7 @@ jobs:
       - name: 프론트엔드 빌드
         working-directory: frontend
         env:
+          CI: false
           REACT_APP_GOOGLE_CLIENT_ID: ${{ vars.REACT_APP_GOOGLE_CLIENT_ID }}
         run: |
           npm install

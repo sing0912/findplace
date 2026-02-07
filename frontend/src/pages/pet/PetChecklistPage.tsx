@@ -11,7 +11,6 @@ import {
   Typography,
   IconButton,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { PetChecklistForm } from '../../components/pet';
