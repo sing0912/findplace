@@ -48,13 +48,20 @@ apiClient.interceptors.request.use(
  * 3. 갱신 실패 시 로그인 페이지로 리다이렉트
  * 4. 에러 응답을 표준 형식으로 변환
  */
+/** 토큰 갱신 대상에서 제외할 URL 패턴 */
+const AUTH_URLS = ['/v1/auth/login', '/v1/auth/register', '/v1/auth/refresh'];
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiResponse<unknown>>) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // 401 에러 발생 시 토큰 갱신 시도
-    if (error.response?.status === 401 && originalRequest) {
+    // 인증 요청(로그인/회원가입/갱신) 자체의 401은 토큰 갱신 시도하지 않음
+    const isAuthRequest = originalRequest?.url && AUTH_URLS.some((url) => originalRequest.url?.includes(url));
+
+    // 401 에러 발생 시 토큰 갱신 시도 (인증 요청 제외, 재시도 1회 제한)
+    if (error.response?.status === 401 && originalRequest && !isAuthRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
 
       if (refreshToken) {

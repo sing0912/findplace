@@ -59,16 +59,17 @@ const InquiryListPage: React.FC = () => {
         throw new Error('문의 목록을 불러오는데 실패했습니다.');
       }
 
-      const data: InquiryListResponse = await response.json();
+      const result = await response.json();
+      const data: InquiryListResponse = result.data || result;
 
       if (pageNum === 0) {
-        setInquiries(data.content);
+        setInquiries(data.content ?? []);
       } else {
-        setInquiries((prev) => [...prev, ...data.content]);
+        setInquiries((prev) => [...prev, ...(data.content ?? [])]);
       }
 
-      setPage(data.number);
-      setHasMore(data.number < data.totalPages - 1);
+      setPage(data.number ?? 0);
+      setHasMore((data.number ?? 0) < (data.totalPages ?? 1) - 1);
     } catch (err) {
       console.error(err);
     } finally {

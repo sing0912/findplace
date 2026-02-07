@@ -78,7 +78,8 @@ const InquiryDetailPage: React.FC = () => {
         throw new Error('문의를 불러오는데 실패했습니다.');
       }
 
-      const data: InquiryDetail = await response.json();
+      const result = await response.json();
+      const data: InquiryDetail = result.data || result;
       setInquiry(data);
       setEditTitle(data.title);
       setEditContent(data.content);
@@ -176,7 +177,7 @@ const InquiryDetailPage: React.FC = () => {
 
   if (!inquiry) return null;
 
-  const statusInfo = statusConfig[inquiry.status];
+  const statusInfo = statusConfig[inquiry.status] || statusConfig.WAITING;
   const canEdit = inquiry.status === 'WAITING';
 
   return (

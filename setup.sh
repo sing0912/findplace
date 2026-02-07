@@ -209,16 +209,23 @@ kill_port_process() {
 check_and_free_ports() {
     print_info "필수 포트 확인 및 정리 중..."
 
+    # 시스템 서비스 중지 (Docker 컨테이너와 충돌 방지)
+    if check_command systemctl; then
+        local services=(httpd apache2 nginx mysqld mariadb mysql postgresql redis redis-server)
+        for svc in "${services[@]}"; do
+            if systemctl is-active --quiet "$svc" 2>/dev/null; then
+                print_warning "시스템 서비스 $svc 중지 중..."
+                sudo systemctl stop "$svc" 2>/dev/null || true
+                sudo systemctl disable "$svc" 2>/dev/null || true
+                print_success "$svc 중지 및 자동시작 비활성화 완료"
+            fi
+        done
+    fi
+
+    # 남은 포트 점유 프로세스 종료
     for port in "${REQUIRED_PORTS[@]}"; do
         kill_port_process $port
     done
-
-    # 시스템 서비스 중지
-    if check_command systemctl; then
-        systemctl stop httpd 2>/dev/null || true
-        systemctl stop apache2 2>/dev/null || true
-        systemctl stop nginx 2>/dev/null || true
-    fi
 
     print_success "포트 정리 완료"
 }
