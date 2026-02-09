@@ -44,7 +44,7 @@ class PetImageServiceTest {
         void shouldUploadImage() {
             // given
             ReflectionTestUtils.setField(petImageService, "bucketName", "petpro");
-            ReflectionTestUtils.setField(petImageService, "minioEndpoint", "http://localhost:9000");
+            ReflectionTestUtils.setField(petImageService, "minioPublicUrl", "http://localhost:9000");
 
             MockMultipartFile file = new MockMultipartFile(
                     "file", "test.jpg", "image/jpeg", new byte[1024]);
@@ -111,7 +111,7 @@ class PetImageServiceTest {
         void shouldDeleteImage() {
             // given
             ReflectionTestUtils.setField(petImageService, "bucketName", "petpro");
-            ReflectionTestUtils.setField(petImageService, "minioEndpoint", "http://localhost:9000");
+            ReflectionTestUtils.setField(petImageService, "minioPublicUrl", "http://localhost:9000");
 
             String imageUrl = "http://localhost:9000/petpro/pets/1/profile_abc.jpg";
 
