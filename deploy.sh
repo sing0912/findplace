@@ -43,6 +43,21 @@ set +a
 : "${JWT_SECRET:?'.env에 JWT_SECRET가 설정되지 않았습니다'}"
 
 # ----------------------------------------
+# Compose 명령어 감지
+# ----------------------------------------
+COMPOSE_CMD="docker compose"
+if ! command -v docker &> /dev/null; then
+    if command -v podman-compose &> /dev/null; then
+        COMPOSE_CMD="podman-compose"
+    else
+        error "docker 또는 podman-compose가 설치되어 있지 않습니다."
+    fi
+fi
+
+# 필수 서비스만 시작 (모니터링/Slave 제외로 메모리 절약)
+ESSENTIAL_SERVICES="postgres-master postgres-coupon mysql-log-master redis minio nginx"
+
+# ----------------------------------------
 # 최신 Release 정보 조회
 # ----------------------------------------
 log "최신 Release 정보 조회 중..."
@@ -84,20 +99,18 @@ if pgrep -f "java.*backend.jar" > /dev/null 2>&1; then
 fi
 
 # ----------------------------------------
-# Docker 인프라 시작
+# 불필요한 컨테이너 중지 (메모리 확보)
 # ----------------------------------------
-log "Docker 인프라 시작 중..."
+log "불필요한 컨테이너 중지 중..."
+for c in petpro-grafana petpro-prometheus petpro-loki petpro-promtail petpro-tempo petpro-postgres-slave1 petpro-postgres-slave2 petpro-mysql-log-slave; do
+    docker stop "$c" 2>/dev/null && docker rm "$c" 2>/dev/null || true
+done
 
-COMPOSE_CMD="docker compose"
-if ! command -v docker &> /dev/null; then
-    if command -v podman-compose &> /dev/null; then
-        COMPOSE_CMD="podman-compose"
-    else
-        error "docker 또는 podman-compose가 설치되어 있지 않습니다."
-    fi
-fi
-
-$COMPOSE_CMD -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ----------------------------------------
+# Docker 인프라 시작 (필수 서비스만)
+# ----------------------------------------
+log "필수 Docker 서비스 시작 중... (${ESSENTIAL_SERVICES})"
+$COMPOSE_CMD -f docker-compose.yml -f docker-compose.prod.yml up -d $ESSENTIAL_SERVICES
 
 # ----------------------------------------
 # Docker 인프라 준비 대기
@@ -116,14 +129,14 @@ if ! docker exec petpro-postgres-coupon psql -U coupon -d petpro_coupon -c "SELE
 fi
 
 # ----------------------------------------
-# 백엔드 실행
+# 백엔드 실행 (메모리 제한)
 # ----------------------------------------
 log "백엔드 시작 중..."
 mkdir -p logs
 
 APP_ENV="${APP_ENV:-prod}"
 
-nohup java -jar backend.jar \
+nohup java -Xms128m -Xmx384m -jar backend.jar \
     --spring.profiles.active="$APP_ENV" \
     > logs/backend.log 2>&1 &
 
@@ -133,15 +146,15 @@ log "백엔드 PID: ${BACKEND_PID}"
 # ----------------------------------------
 # 백엔드 헬스체크 대기
 # ----------------------------------------
-log "백엔드 헬스체크 대기 중..."
+log "백엔드 헬스체크 대기 중 (최대 3분)..."
 
-for i in $(seq 1 30); do
+for i in $(seq 1 90); do
     if curl -sf http://localhost:${APP_PORT:-8080}/api/health > /dev/null 2>&1; then
         log "백엔드 헬스체크 통과!"
         break
     fi
-    if [ "$i" -eq 30 ]; then
-        warn "백엔드 헬스체크 타임아웃 (60초). logs/backend.log를 확인하세요."
+    if [ "$i" -eq 90 ]; then
+        warn "백엔드 헬스체크 타임아웃 (3분). logs/backend.log를 확인하세요."
     fi
     sleep 2
 done
