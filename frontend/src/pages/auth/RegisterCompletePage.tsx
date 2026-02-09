@@ -58,7 +58,7 @@ const RegisterCompletePage: React.FC = () => {
             mb: 4,
           }}
         >
-          펫프 회원이 되신 것을 환영합니다.
+          펫프로 회원이 되신 것을 환영합니다.
           <br />
           이제 모든 서비스를 이용하실 수 있습니다.
         </Typography>

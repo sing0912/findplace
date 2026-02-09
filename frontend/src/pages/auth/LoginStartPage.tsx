@@ -67,7 +67,7 @@ const LoginStartPage: React.FC = () => {
               mb: 1,
             }}
           >
-            펫프
+            펫프로
           </Typography>
           <Typography
             sx={{
@@ -76,7 +76,7 @@ const LoginStartPage: React.FC = () => {
               color: '#404040',
             }}
           >
-            소중한 반려동물과의 마지막 순간을 함께합니다
+            돌봄이 필요한 순간, 펫프로
           </Typography>
         </Box>
 
