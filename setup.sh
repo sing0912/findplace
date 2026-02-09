@@ -544,6 +544,16 @@ check_infrastructure() {
     # MinIO
     if curl -s http://localhost:9000/minio/health/live &> /dev/null; then
         print_success "MinIO: 정상"
+        # 버킷 자동 생성
+        local bucket="${MINIO_BUCKET:-petpro}"
+        if ! $RUNTIME exec petpro-minio ls "/data/${bucket}" &>/dev/null; then
+            print_info "MinIO 버킷(${bucket}) 생성 중..."
+            $RUNTIME exec petpro-minio mkdir -p "/data/${bucket}" \
+                && print_success "MinIO 버킷 생성 완료" \
+                || print_warning "MinIO 버킷 생성 실패 - 수동 확인 필요"
+        else
+            print_success "MinIO 버킷(${bucket}): 존재"
+        fi
     else
         print_warning "MinIO: 확인 필요"
     fi

@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,11 +32,19 @@ public class PetImageService {
     @Value("${app.minio.bucket}")
     private String bucketName;
 
-    @Value("${app.minio.endpoint}")
-    private String minioEndpoint;
+    @Value("${app.minio.public-url}")
+    private String minioPublicUrl;
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "webp");
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    // 파일 매직바이트로 실제 이미지 여부 검증
+    private static final Map<String, byte[]> MAGIC_BYTES = Map.of(
+            "jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "png", new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47},
+            "gif", new byte[]{0x47, 0x49, 0x46, 0x38},
+            "webp", new byte[]{0x52, 0x49, 0x46, 0x46}
+    );
 
     /**
      * 프로필 이미지 업로드
@@ -58,7 +68,7 @@ public class PetImageService {
 
             s3Client.putObject(putRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            return String.format("%s/%s/%s", minioEndpoint, bucketName, objectKey);
+            return String.format("%s/%s/%s", minioPublicUrl, bucketName, objectKey);
         } catch (IOException e) {
             log.error("Failed to upload pet profile image: petId={}, error={}", petId, e.getMessage());
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
@@ -103,17 +113,44 @@ public class PetImageService {
         if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
             throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
         }
+
+        // 매직바이트 검증: 확장자를 위조해도 실제 파일 내용 확인
+        validateMagicBytes(file, extension.toLowerCase());
+    }
+
+    private void validateMagicBytes(MultipartFile file, String extension) {
+        String magicKey = "jpeg".equals(extension) ? "jpg" : extension;
+        byte[] expected = MAGIC_BYTES.get(magicKey);
+        if (expected == null) {
+            return;
+        }
+        try (InputStream is = file.getInputStream()) {
+            byte[] header = new byte[expected.length];
+            if (is.read(header) < expected.length) {
+                throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+            }
+            for (int i = 0; i < expected.length; i++) {
+                if (header[i] != expected[i]) {
+                    throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+                }
+            }
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+        }
     }
 
     private String getExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
         }
-        return filename.substring(filename.lastIndexOf(".") + 1);
+        // Path Traversal 방지: 파일명에서 경로 구분자 제거 후 확장자만 추출
+        String safeName = filename.replace("\\", "/");
+        safeName = safeName.substring(safeName.lastIndexOf("/") + 1);
+        return safeName.substring(safeName.lastIndexOf(".") + 1);
     }
 
     private String extractObjectKey(String imageUrl) {
-        String prefix = String.format("%s/%s/", minioEndpoint, bucketName);
+        String prefix = String.format("%s/%s/", minioPublicUrl, bucketName);
         if (imageUrl.startsWith(prefix)) {
             return imageUrl.substring(prefix.length());
         }

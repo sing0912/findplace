@@ -344,6 +344,76 @@ make clean              # 빌드 파일 정리
 
 ---
 
+## 배포 (GitHub Actions + Release)
+
+서버 성능이 낮아 빌드는 GitHub Actions에서, 서버는 실행만 합니다.
+
+```
+로컬: git push origin main
+  → GitHub Actions 자동 빌드 (~2분) → Release 생성
+
+서버: ./deploy.sh
+  → 최신 Release 다운로드 → 배포 → 시작 (~30초)
+```
+
+### 배포 순서
+
+#### 1. 코드 수정 후 푸시 (공통)
+
+```bash
+git add .
+git commit -m "[수정] 변경사항 설명"
+git push origin main
+# → GitHub Actions 탭에서 빌드 완료 확인 (~2분)
+```
+
+#### 2-A. 백엔드만 수정했을 때
+
+```bash
+# 서버에서
+./deploy.sh
+./scripts/back_end_restart.sh
+```
+
+#### 2-B. 프론트엔드만 수정했을 때
+
+```bash
+# 서버에서
+./deploy.sh
+./scripts/front_end_restart.sh
+```
+
+#### 2-C. 둘 다 수정했을 때
+
+```bash
+# 서버에서
+./deploy.sh
+```
+
+> `deploy.sh`가 백엔드 + 프론트엔드 + nginx 전부 재시작합니다.
+
+### 코드 변경 없이 재시작만 할 때
+
+```bash
+./scripts/restart-app.sh              # 전체 재시작 (백엔드 + nginx)
+./scripts/restart-app.sh backend      # 백엔드만 재시작
+./scripts/restart-app.sh frontend     # 프론트엔드(nginx)만 재시작
+./scripts/restart-app.sh stop         # 백엔드 중지
+./scripts/restart-app.sh status       # 상태 확인
+```
+
+### 초기 설정 (1회)
+
+1. **GitHub Settings > Actions > Variables**에 `REACT_APP_GOOGLE_CLIENT_ID` 등록
+2. 서버 `.env`에 추가:
+   ```
+   GITHUB_REPO=sing0912/findplace
+   MINIO_PUBLIC_URL=https://dev.findplace.co.kr/files
+   ```
+3. 서버에 Java 21 JRE 설치 확인
+
+---
+
 ## 서비스 포트
 
 | 서비스 | 포트 | URL |

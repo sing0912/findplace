@@ -129,6 +129,17 @@ if ! docker exec petpro-postgres-coupon psql -U coupon -d petpro_coupon -c "SELE
 fi
 
 # ----------------------------------------
+# MinIO 버킷 자동 생성 (없는 경우)
+# ----------------------------------------
+MINIO_BUCKET="${MINIO_BUCKET:-petpro}"
+if ! docker exec petpro-minio ls "/data/${MINIO_BUCKET}" &>/dev/null; then
+    log "MinIO 버킷(${MINIO_BUCKET}) 생성 중..."
+    docker exec petpro-minio mkdir -p "/data/${MINIO_BUCKET}" \
+        && log "MinIO 버킷 생성 완료" \
+        || warn "MinIO 버킷 생성 실패 - 수동 확인 필요"
+fi
+
+# ----------------------------------------
 # 백엔드 실행 (메모리 제한)
 # ----------------------------------------
 log "백엔드 시작 중..."
