@@ -46,15 +46,6 @@ public class PetImageService {
             "webp", new byte[]{0x52, 0x49, 0x46, 0x46}
     );
 
-    // 확장자 기반 Content-Type 매핑 (클라이언트 헤더 신뢰 방지)
-    private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
-            "jpg", "image/jpeg",
-            "jpeg", "image/jpeg",
-            "png", "image/png",
-            "gif", "image/gif",
-            "webp", "image/webp"
-    );
-
     /**
      * 프로필 이미지 업로드
      *
