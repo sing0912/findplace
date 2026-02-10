@@ -41,9 +41,24 @@ import {
   AdminLoginPage,
   DashboardPage,
   UserManagementPage,
-  CompanyManagementPage,
-  SupplierManagementPage,
-  InventoryManagementPage,
+  PartnerManagementPage,
+  PartnerReviewPage,
+  ReservationManagementPage,
+  DisputeManagementPage,
+  SettlementPage,
+  FeeSettingPage,
+  InquiryManagementPage,
+  FaqManagementPage,
+  NoticeManagementPage,
+  EventManagementPage,
+  CommunityManagementPage,
+  CampaignManagementPage,
+  StatisticsPage,
+  SettingsPage,
+  AdminPolicyManagementPage,
+  AdminProfilePage,
+  AuditLogPage,
+  AppVersionPage,
 } from './pages/admin';
 
 // MyPage Pages
@@ -172,10 +187,39 @@ const AppContent: React.FC = () => {
           >
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="users" element={<UserManagementPage />} />
-            <Route path="companies" element={<CompanyManagementPage />} />
-            <Route path="suppliers" element={<SupplierManagementPage />} />
-            <Route path="inventory" element={<InventoryManagementPage />} />
+
+            {/* 회원 관리 */}
+            <Route path="members/users" element={<UserManagementPage />} />
+            <Route path="members/partners" element={<PartnerManagementPage />} />
+            <Route path="members/partner-review" element={<PartnerReviewPage />} />
+
+            {/* 예약 관리 */}
+            <Route path="reservations" element={<ReservationManagementPage />} />
+            <Route path="reservations/disputes" element={<DisputeManagementPage />} />
+
+            {/* 정산 관리 */}
+            <Route path="settlement" element={<SettlementPage />} />
+            <Route path="settlement/fees" element={<FeeSettingPage />} />
+
+            {/* 고객센터 */}
+            <Route path="cs/inquiries" element={<InquiryManagementPage />} />
+            <Route path="cs/faq" element={<FaqManagementPage />} />
+
+            {/* 콘텐츠 관리 */}
+            <Route path="contents/notices" element={<NoticeManagementPage />} />
+            <Route path="contents/events" element={<EventManagementPage />} />
+            <Route path="contents/community" element={<CommunityManagementPage />} />
+            <Route path="contents/campaigns" element={<CampaignManagementPage />} />
+
+            {/* 통계 */}
+            <Route path="statistics" element={<StatisticsPage />} />
+
+            {/* 설정 */}
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings/policies" element={<AdminPolicyManagementPage />} />
+            <Route path="settings/profile" element={<AdminProfilePage />} />
+            <Route path="settings/audit-log" element={<AuditLogPage />} />
+            <Route path="settings/app-version" element={<AppVersionPage />} />
           </Route>
 
           {/* 사용자 보호 라우트 - ProtectedRoute + MainLayout */}
@@ -196,7 +240,7 @@ const AppContent: React.FC = () => {
             <Route path="mypage" element={<MyPage />} />
             <Route path="mypage/edit" element={<EditProfilePage />} />
             <Route path="mypage/password" element={<ChangePasswordPage />} />
-            <Route path="mypage/policy" element={<PolicyListPage />} />
+            <Route path="mypage/settings/policies" element={<PolicyListPage />} />
 
             {/* 펫 관리 */}
             <Route path="mypage/pets" element={<PetListPage />} />
