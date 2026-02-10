@@ -983,6 +983,39 @@ ssh -L 9001:localhost:9001 user@server  # MinIO Console
 
 ## 파일 스토리지 보안 (필수)
 
+### MinIO 자격 증명 (필수)
+
+**MinIO 루트 자격 증명은 반드시 강력한 랜덤 비밀번호를 사용해야 합니다.**
+
+```bash
+# Bad - 기본/추측 가능한 비밀번호 (절대 금지)
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123!
+
+# Good - 강력한 랜덤 비밀번호
+MINIO_ACCESS_KEY=petpro-minio-$(openssl rand -hex 8)
+MINIO_SECRET_KEY=$(openssl rand -base64 32)
+```
+
+> **⛔ 프로덕션에서 `minioadmin` 사용자명/비밀번호 절대 금지**
+> MinIO 포트(9000/9001)가 노출될 경우 전체 파일 시스템 탈취 가능
+
+### MinIO 버전 관리 (필수)
+
+**MinIO 이미지는 정기적으로 업데이트해야 합니다.**
+
+| 항목 | 현재 | 권장 |
+|------|------|------|
+| `minio/minio` | 업데이트 필요 시 최신 안정 버전으로 교체 | 6개월마다 점검 |
+| `minio/mc` | minio 버전과 호환되는 버전 | 동일 주기 |
+
+```bash
+# 현재 MinIO 이미지 취약점 스캔
+docker scout cves minio/minio:RELEASE.2022-10-24T18-35-07Z
+# 또는
+trivy image minio/minio:RELEASE.2022-10-24T18-35-07Z
+```
+
 ### MinIO 버킷 정책
 
 **경로별 접근 정책을 분리합니다. 버킷 전체를 public으로 설정하지 않습니다.**
@@ -995,6 +1028,30 @@ mc anonymous set download myminio/petpro/public
 # Bad - 버킷 전체 공개 (민감 파일 노출 위험)
 mc anonymous set download myminio/petpro
 mc anonymous set public myminio/petpro
+```
+
+### MinIO 초기화 (`minio-init`) 주의사항
+
+`docker-compose.yml`의 `minio-init` 컨테이너는 **1회 실행 후 종료**됩니다.
+
+**주의: 아래 상황에서 anonymous 정책이 사라질 수 있습니다:**
+- MinIO 데이터 볼륨 재생성 시
+- MinIO 컨테이너 재생성 시
+
+**정책 미적용 확인 방법:**
+```bash
+# minio-init 로그 확인
+docker logs petpro-minio-init
+
+# "Access permission ... set to download" 메시지가 없으면 재실행 필요
+docker-compose run --rm minio-init
+```
+
+**minio-init 명령에서 비밀번호 특수문자 주의:**
+```yaml
+# 환경변수를 따옴표로 감싸야 !, $, # 등 특수문자가 안전하게 전달됨
+command: >
+  "mc alias set myminio http://minio:9000 \"$${MINIO_ACCESS_KEY}\" \"$${MINIO_SECRET_KEY}\" && ..."
 ```
 
 ### 경로별 접근 정책
@@ -1018,11 +1075,101 @@ location /files/petpro/care/    { return 403; }
 # 공개 경로만 허용 (GET/HEAD만)
 location /files/petpro/pets/ {
     limit_except GET HEAD { deny all; }
+    limit_req zone=api_limit burst=20 nodelay;
+
+    # Path Traversal 방지: '..' 포함 요청 차단
+    if ($request_uri ~* "\.\.") {
+        return 403;
+    }
+
+    rewrite ^/files/(.*) /$1 break;
+    proxy_pass http://minio:9000;
     # ...
 }
 
 # 나머지 전부 차단
 location /files/ { return 403; }
+```
+
+### ⛔ Nginx `add_header` 상속 주의 (필수)
+
+**Nginx에서 `add_header`를 location 블록에서 사용하면, 상위 블록(server, http)의 모든 `add_header`가 상속되지 않습니다.**
+
+이로 인해 MinIO 프록시 응답에서 보안 헤더(`X-Content-Type-Options`, `X-Frame-Options`, HSTS 등)가 사라질 수 있습니다.
+
+```nginx
+# Bad - 보안 헤더 누락 (상위 블록 헤더가 모두 사라짐)
+location /files/petpro/pets/ {
+    add_header Cache-Control "public, immutable";
+    add_header Content-Disposition "inline";
+    # → X-Content-Type-Options, HSTS 등 모두 사라짐!
+}
+
+# Good - 보안 헤더 명시적 선언
+location /files/petpro/pets/ {
+    add_header Cache-Control "public, immutable";
+    add_header Content-Disposition "inline";
+
+    # 보안 헤더 반드시 재선언
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self)" always;
+}
+```
+
+> **⛔ `X-Content-Type-Options: nosniff` 누락 시 위험:**
+> 이미지로 위장한 HTML/JS 파일이 브라우저에서 실행될 수 있습니다 (Stored XSS).
+> `add_header`를 사용하는 **모든 location 블록**에서 보안 헤더를 반드시 재선언하세요.
+
+### Path Traversal 방지 (필수)
+
+Nginx rewrite 규칙에서 `(.*)` 캡처는 경로 조작에 취약할 수 있습니다.
+
+```nginx
+# 이중 인코딩 공격 예시:
+# /files/petpro/pets/..%252F..%252Fsitters/private.jpg
+# → rewrite 후: /petpro/pets/..%2F..%2Fsitters/private.jpg
+# → MinIO가 디코딩하여 sitters/ 경로 접근 가능
+
+# 방어: '..' 포함 요청 차단
+if ($request_uri ~* "\.\.") {
+    return 403;
+}
+```
+
+### 파일 삭제 시 objectKey 검증 (필수)
+
+**파일 삭제 시 반드시 objectKey 프리픽스를 검증해야 합니다.**
+
+```java
+// Bad - 프리픽스 검증 없이 삭제 (임의 파일 삭제 가능)
+if (objectKey != null) {
+    s3Client.deleteObject(deleteRequest);
+}
+
+// Good - 프리픽스 검증 후 삭제
+if (objectKey != null && objectKey.startsWith("pets/") && !objectKey.contains("..")) {
+    s3Client.deleteObject(deleteRequest);
+}
+```
+
+### 파일 다운로드 Rate Limiting (필수)
+
+**파일 다운로드 경로에도 반드시 Rate Limit을 적용해야 합니다.**
+
+```nginx
+# Bad - Rate Limit 미적용 (무제한 스크래핑/DoS 가능)
+location /files/petpro/pets/ {
+    proxy_pass http://minio:9000;
+}
+
+# Good - Rate Limit 적용
+location /files/petpro/pets/ {
+    limit_req zone=api_limit burst=20 nodelay;
+    proxy_pass http://minio:9000;
+}
 ```
 
 ### 파일 업로드 검증 (강화)
@@ -1121,9 +1268,32 @@ services:
 | 옵션 | 설명 | 필수 |
 |------|------|------|
 | `security_opt: [no-new-privileges:true]` | 권한 상승 방지 | **필수** |
-| `cap_drop: [ALL]` | 불필요한 Linux capability 제거 | **권장** |
+| `cap_drop: [ALL]` | 불필요한 Linux capability 제거 | **필수** |
 | `deploy.resources.limits` | CPU/메모리 제한 | **권장** |
 | `read_only: true` | 읽기 전용 파일시스템 (tmpfs와 함께) | 선택 |
+
+> **⛔ `cap_drop: ALL`은 MinIO 포함 모든 서비스에 적용해야 합니다.**
+> MinIO 컨테이너가 침해될 경우 전체 파일 시스템에 접근할 수 있으므로, Linux capability를 최소화하여 피해 범위를 제한해야 합니다.
+
+### Docker 네트워크 분리 (권장)
+
+**모든 서비스가 단일 `petpro-network`를 공유하면, 한 컨테이너 침해 시 다른 서비스에 직접 접근 가능합니다.**
+
+```yaml
+# 권장: 서비스 그룹별 네트워크 분리
+networks:
+  app-network:        # backend, frontend, nginx
+  data-network:       # postgres, redis, minio
+  monitoring-network: # prometheus, grafana, loki
+
+# 예: Grafana는 data-network에 접근 불가 → MinIO 직접 접근 차단
+```
+
+| 네트워크 | 포함 서비스 | 접근 가능 대상 |
+|----------|------------|---------------|
+| `app-network` | nginx, backend, frontend | data-network (backend만) |
+| `data-network` | postgres, redis, minio | 내부만 |
+| `monitoring-network` | prometheus, grafana, loki | backend metrics만 |
 
 ---
 
@@ -1241,9 +1411,11 @@ location /api {
 - [ ] HTTPS 적용 (TLS 1.2 이상)
 - [ ] 보안 헤더 설정 (HSTS, X-Content-Type-Options, X-Frame-Options, **CSP**, Referrer-Policy)
 - [ ] CSP(Content-Security-Policy) 헤더 설정
+- [ ] **Nginx `add_header` 상속 주의: location 블록에서 `add_header` 사용 시 보안 헤더 재선언 필수**
 - [ ] 소스맵: `GENERATE_SOURCEMAP=false` + Nginx `.map` 차단
 - [ ] CORS 허용 출처 최소화 (프로덕션에서 localhost 제거)
 - [ ] Rate Limiting 설정 (업로드: 10r/m, API: 30r/s, 로그인: 5r/m)
+- [ ] **파일 다운로드 경로에도 Rate Limit 적용 (`limit_req zone=api_limit`)**
 - [ ] Nginx body size 제한 (기본 10M)
 - [ ] 로그에서 민감정보 제외 (OAuth 이메일 마스킹)
 - [ ] 환경변수로 시크릿 관리 (.env는 .gitignore 포함)
@@ -1253,10 +1425,17 @@ location /api {
 - [ ] Swagger UI: 프로덕션에서 비활성화
 - [ ] MinIO: 경로별 anonymous 정책 (pets/, public/만 download)
 - [ ] MinIO: 민감 경로 Nginx에서 403 차단 (sitters/docs/, chat/, care/)
+- [ ] **MinIO: 프로덕션 강력한 자격 증명 사용 (`minioadmin` 절대 금지)**
+- [ ] **MinIO: 이미지 버전 정기 업데이트 (CVE 점검)**
+- [ ] **MinIO: Path Traversal 방지 (`..` 포함 요청 차단)**
+- [ ] **MinIO: `minio-init` 정책 적용 확인 (재배포 시 필수 점검)**
 - [ ] 방화벽 보안 자동 적용 확인 (`./scripts/secure-firewall.sh --check`)
 - [ ] pg_hba.conf: `0.0.0.0/0` 금지, Docker 서브넷만 허용
 - [ ] MySQL init SQL: 복제 비밀번호 환경변수화
 - [ ] 컨테이너: `security_opt: [no-new-privileges:true]` 설정
+- [ ] **컨테이너: MinIO 포함 모든 서비스 `cap_drop: [ALL]` 설정**
+- [ ] **Docker 네트워크: MinIO 전용 네트워크 분리 (모니터링 컨테이너에서 접근 차단)**
 - [ ] Content-Disposition 헤더 설정 (이미지: inline)
 - [ ] Nginx `server_tokens off` 설정 (서버 버전 숨김)
 - [ ] 프로덕션 에러 페이지: 내부 정보 미노출 커스텀 페이지
+- [ ] **파일 삭제 시 objectKey 프리픽스 검증 (`pets/` 프리픽스 확인 + `..` 차단)**

@@ -34,28 +34,44 @@ public class PetChecklistService {
     public PetChecklistResponse createChecklist(Long petId, Long userId, PetChecklistRequest request) {
         Pet pet = findPetWithOwnerCheck(petId, userId);
 
-        if (petChecklistRepository.existsByPetId(petId)) {
-            throw new BusinessException(ErrorCode.CHECKLIST_ALREADY_EXISTS);
-        }
-
-        PetChecklist checklist = PetChecklist.builder()
-                .pet(pet)
-                .friendlyToStrangers(request.getFriendlyToStrangers())
-                .friendlyToDogs(request.getFriendlyToDogs())
-                .friendlyToCats(request.getFriendlyToCats())
-                .activityLevel(request.getActivityLevel())
-                .barkingLevel(request.getBarkingLevel())
-                .separationAnxiety(request.getSeparationAnxiety())
-                .houseTraining(request.getHouseTraining())
-                .commandTraining(request.getCommandTraining())
-                .eatingHabit(request.getEatingHabit())
-                .walkPreference(request.getWalkPreference())
-                .fearItems(request.getFearItems())
-                .additionalNotes(request.getAdditionalNotes())
-                .build();
-
-        PetChecklist saved = petChecklistRepository.save(checklist);
-        return PetChecklistResponse.from(saved);
+        // 이미 존재하면 수정으로 처리 (upsert)
+        return petChecklistRepository.findByPetId(petId)
+                .map(existing -> {
+                    existing.update(
+                            request.getFriendlyToStrangers(),
+                            request.getFriendlyToDogs(),
+                            request.getFriendlyToCats(),
+                            request.getActivityLevel(),
+                            request.getBarkingLevel(),
+                            request.getSeparationAnxiety(),
+                            request.getHouseTraining(),
+                            request.getCommandTraining(),
+                            request.getEatingHabit(),
+                            request.getWalkPreference(),
+                            request.getFearItems(),
+                            request.getAdditionalNotes()
+                    );
+                    return PetChecklistResponse.from(existing);
+                })
+                .orElseGet(() -> {
+                    PetChecklist checklist = PetChecklist.builder()
+                            .pet(pet)
+                            .friendlyToStrangers(request.getFriendlyToStrangers())
+                            .friendlyToDogs(request.getFriendlyToDogs())
+                            .friendlyToCats(request.getFriendlyToCats())
+                            .activityLevel(request.getActivityLevel())
+                            .barkingLevel(request.getBarkingLevel())
+                            .separationAnxiety(request.getSeparationAnxiety())
+                            .houseTraining(request.getHouseTraining())
+                            .commandTraining(request.getCommandTraining())
+                            .eatingHabit(request.getEatingHabit())
+                            .walkPreference(request.getWalkPreference())
+                            .fearItems(request.getFearItems())
+                            .additionalNotes(request.getAdditionalNotes())
+                            .build();
+                    PetChecklist saved = petChecklistRepository.save(checklist);
+                    return PetChecklistResponse.from(saved);
+                });
     }
 
     @Transactional
