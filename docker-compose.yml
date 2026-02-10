@@ -257,8 +257,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     entrypoint: /bin/sh -c
     command: >
-      "mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
-       mc mb myminio/petpro --ignore-existing &&
+      "mc alias set myminio http://minio:9000 \"$${MINIO_ACCESS_KEY}\" \"$${MINIO_SECRET_KEY}\" &&
+       mc mb myminio/petpro --ignore-existing ||
+       true &&
        mc anonymous set download myminio/petpro/pets &&
        mc anonymous set download myminio/petpro/public &&
        echo 'MinIO bucket initialized'"

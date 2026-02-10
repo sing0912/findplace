@@ -97,7 +97,7 @@ public class PetImageService {
 
         try {
             String objectKey = extractObjectKey(imageUrl);
-            if (objectKey != null) {
+            if (objectKey != null && objectKey.startsWith("pets/") && !objectKey.contains("..")) {
                 DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                         .bucket(bucketName)
                         .key(objectKey)
