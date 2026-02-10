@@ -63,6 +63,14 @@ public class VerificationRequest {
     @Column(name = "reset_token", length = 36)
     private String resetToken;
 
+    /** 인증 시도 횟수 (최대 5회) */
+    @Column(name = "attempt_count", nullable = false)
+    @Builder.Default
+    private int attemptCount = 0;
+
+    /** 최대 인증 시도 횟수 */
+    private static final transient int MAX_ATTEMPTS = 5;
+
     /** 생성 시간 */
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -93,10 +101,18 @@ public class VerificationRequest {
     }
 
     /**
-     * 인증번호가 일치하는지 확인
+     * 인증번호가 일치하는지 확인 (시도 횟수 증가)
      */
     public boolean matchCode(String inputCode) {
+        this.attemptCount++;
         return this.code.equals(inputCode);
+    }
+
+    /**
+     * 최대 시도 횟수를 초과했는지 확인
+     */
+    public boolean isMaxAttemptsExceeded() {
+        return this.attemptCount >= MAX_ATTEMPTS;
     }
 
     /**

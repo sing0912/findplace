@@ -34,6 +34,9 @@
 
 ### 2.1 CouponType (쿠폰 유형)
 
+> **구현 참고**: CouponType은 데이터베이스 유연성을 위해 Entity(`coupon_types` 테이블)로 구현되어 있습니다.
+> Entity 필드: id, code, name, description, isActive, createdAt, updatedAt
+
 | 값 | 코드 | 설명 |
 |----|------|------|
 | EVENT | EVENT | 이벤트 쿠폰 (기간 한정 프로모션) |
@@ -50,22 +53,29 @@
 
 ### 2.3 Coupon (쿠폰 마스터)
 
+> **구현 참고**: 금액 필드는 정밀도를 위해 `BigDecimal`(precision=10, scale=2)을 사용합니다.
+
 | 필드 | 타입 | 설명 | 제약조건 |
 |------|------|------|----------|
 | id | Long | PK | Auto Increment |
-| code | String | 쿠폰 코드 (자동 생성 또는 관리자 지정) | Unique, Not Null, Max 20자 |
-| name | String | 쿠폰명 | Not Null, Max 100자 |
-| description | String | 쿠폰 설명 | Nullable, Max 500자 |
-| discountType | Enum | 할인 방식 (FIXED/PERCENT) | Not Null |
-| discountValue | Integer | 할인 값 (금액 또는 퍼센트) | Not Null |
-| minBookingAmount | Integer | 최소 예약 금액 (이상일 때 사용 가능) | Nullable |
-| maxDiscountAmount | Integer | 최대 할인 금액 (PERCENT일 때 상한) | Nullable |
-| usageLimit | Integer | 전체 사용 제한 수 (null이면 무제한) | Nullable |
-| usedCount | Integer | 사용된 횟수 | Not Null, Default 0 |
-| couponType | Enum | 쿠폰 유형 (EVENT/INVITE/FIRST_USE/WELCOME) | Not Null |
-| validFrom | LocalDateTime | 사용 시작일시 | Not Null |
-| validTo | LocalDateTime | 사용 종료일시 | Not Null |
+| code | String | 쿠폰 코드 (자동 생성 또는 관리자 지정) | Unique, Not Null, Max 50자 |
+| name | String | 쿠폰명 | Not Null, Max 200자 |
+| description | String | 쿠폰 설명 | Nullable, TEXT |
+| couponType | CouponType | 쿠폰 유형 (ManyToOne) | Nullable |
+| discountType | Enum | 할인 방식 (FIXED/PERCENT/FREE) | Not Null |
+| discountValue | BigDecimal | 할인 값 (금액 또는 퍼센트) | Not Null |
+| maxDiscountAmount | BigDecimal | 최대 할인 금액 (PERCENT일 때 상한) | Nullable |
+| issueType | Enum | 발급 유형 (MANUAL/CODE/AUTO) | Not Null, Default MANUAL |
+| autoIssueEvent | Enum | 자동 발급 이벤트 | Nullable |
+| maxIssueCount | Integer | 최대 발급 수량 (null이면 무제한) | Nullable |
+| issuedCount | Integer | 발급된 수량 | Not Null, Default 0 |
+| maxPerUser | Integer | 사용자당 최대 발급 횟수 | Not Null, Default 1 |
+| validStartDate | LocalDate | 유효 시작일 | Nullable |
+| validEndDate | LocalDate | 유효 종료일 | Nullable |
+| validDays | Integer | 발급일로부터 유효일수 | Nullable |
+| isStackable | Boolean | 중복 사용 가능 여부 | Not Null, Default false |
 | isActive | Boolean | 활성 여부 | Not Null, Default true |
+| conditions | List | 쿠폰 조건 (OneToMany → CouponCondition) | Cascade ALL |
 | createdAt | LocalDateTime | 생성일시 | Not Null |
 | updatedAt | LocalDateTime | 수정일시 | Not Null |
 
@@ -567,8 +577,15 @@ backend/src/main/java/com/petpro/domain/coupon/
 ├── entity/
 │   ├── Coupon.java
 │   ├── UserCoupon.java
-│   ├── CouponType.java             # Enum
-│   └── DiscountType.java           # Enum
+│   ├── CouponType.java             # Entity (coupon_types 테이블)
+│   ├── DiscountType.java           # Enum (FIXED, PERCENT, FREE)
+│   ├── DiscountMethod.java         # (삭제됨 → DiscountType으로 통합)
+│   ├── IssueType.java              # Enum (MANUAL, CODE, AUTO)
+│   ├── AutoIssueEvent.java         # Enum (자동 발급 이벤트)
+│   ├── CouponCondition.java        # Entity (쿠폰 조건 EAV)
+│   ├── CouponStatus.java           # Enum (사용자 쿠폰 상태)
+│   ├── ConditionOperator.java      # Enum (조건 연산자)
+│   └── CouponUsageHistory.java     # Entity (사용 이력)
 ├── repository/
 │   ├── CouponRepository.java
 │   └── UserCouponRepository.java

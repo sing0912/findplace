@@ -2,6 +2,7 @@ package com.petpro.domain.log.controller;
 
 import com.petpro.domain.log.dto.StatisticsResponse.*;
 import com.petpro.domain.log.service.LogStatisticsService;
+import com.petpro.global.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -26,51 +27,39 @@ public class LogStatisticsController {
 
     private final LogStatisticsService logStatisticsService;
 
-    /**
-     * 운영자 행위 통계
-     */
     @GetMapping("/admin-actions")
-    public ResponseEntity<AdminActionStatistics> getAdminActionStatistics(
+    public ResponseEntity<ApiResponse<AdminActionStatistics>> getAdminActionStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 
         AdminActionStatistics statistics = logStatisticsService.getAdminActionStatistics(startDate, endDate);
-        return ResponseEntity.ok(statistics);
+        return ResponseEntity.ok(ApiResponse.success(statistics));
     }
 
-    /**
-     * 사용자 행위 통계
-     */
     @GetMapping("/user-actions")
-    public ResponseEntity<UserActionStatistics> getUserActionStatistics(
+    public ResponseEntity<ApiResponse<UserActionStatistics>> getUserActionStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 
         UserActionStatistics statistics = logStatisticsService.getUserActionStatistics(startDate, endDate);
-        return ResponseEntity.ok(statistics);
+        return ResponseEntity.ok(ApiResponse.success(statistics));
     }
 
-    /**
-     * 사용자 행동 패턴 통계
-     */
     @GetMapping("/user-behavior")
-    public ResponseEntity<UserBehaviorStatistics> getUserBehaviorStatistics(
+    public ResponseEntity<ApiResponse<UserBehaviorStatistics>> getUserBehaviorStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 
         UserBehaviorStatistics statistics = logStatisticsService.getUserBehaviorStatistics(startDate, endDate);
-        return ResponseEntity.ok(statistics);
+        return ResponseEntity.ok(ApiResponse.success(statistics));
     }
 
-    /**
-     * CS 패턴 분석 통계
-     */
     @GetMapping("/cs-analysis")
-    public ResponseEntity<CsAnalysisStatistics> getCsAnalysisStatistics(
+    public ResponseEntity<ApiResponse<CsAnalysisStatistics>> getCsAnalysisStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 
         CsAnalysisStatistics statistics = logStatisticsService.getCsAnalysisStatistics(startDate, endDate);
-        return ResponseEntity.ok(statistics);
+        return ResponseEntity.ok(ApiResponse.success(statistics));
     }
 }

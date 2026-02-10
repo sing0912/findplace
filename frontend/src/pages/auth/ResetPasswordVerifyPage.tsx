@@ -13,17 +13,17 @@ const TIMER_SECONDS = 180; // 3분
 const ResetPasswordVerifyPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { verificationId, email, phone } = location.state || {};
+  const { requestId, email, phone } = location.state || {};
 
   const [code, setCode] = useState('');
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
-  const [currentVerificationId, setCurrentVerificationId] = useState(verificationId);
+  const [currentRequestId, setCurrentRequestId] = useState(requestId);
 
   useEffect(() => {
-    if (!verificationId) {
+    if (!requestId) {
       navigate('/reset-password');
       return;
     }
@@ -39,7 +39,7 @@ const ResetPasswordVerifyPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [verificationId, navigate, currentVerificationId]);
+  }, [requestId, navigate, currentRequestId]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -68,7 +68,7 @@ const ResetPasswordVerifyPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setCurrentVerificationId(data.verificationId);
+      setCurrentRequestId(data.requestId);
       setTimeLeft(TIMER_SECONDS);
       setCode('');
     } catch (err) {
@@ -91,7 +91,7 @@ const ResetPasswordVerifyPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          verificationId: currentVerificationId,
+          requestId: currentRequestId,
           code,
         }),
       });
@@ -104,7 +104,7 @@ const ResetPasswordVerifyPage: React.FC = () => {
 
       navigate('/reset-password/confirm', {
         state: {
-          resetToken: data.resetToken,
+          token: data.token,
         },
       });
     } catch (err) {

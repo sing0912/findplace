@@ -130,8 +130,7 @@ class PetE2ETest extends BaseE2ETest {
     void deletePet_success() {
         ResponseEntity<String> response = deleteWithAuth("/v1/pets/" + createdPetId, userAuth.getAccessToken());
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(extractField(response.getBody(), "success")).isEqualTo("true");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test

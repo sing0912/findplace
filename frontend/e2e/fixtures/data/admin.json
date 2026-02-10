@@ -1,0 +1,8 @@
+{
+  "adminTokenResponse": {
+    "accessToken": "admin-access-token-abc123",
+    "refreshToken": "admin-refresh-token-xyz789",
+    "expiresIn": 3600,
+    "tokenType": "Bearer"
+  }
+}

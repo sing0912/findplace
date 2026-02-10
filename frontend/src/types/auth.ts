@@ -27,8 +27,31 @@ export interface RegisterRequest {
   password: string;
   /** 사용자 이름 */
   name: string;
-  /** 전화번호 (선택적) */
-  phone?: string;
+  /** 닉네임 (선택적) */
+  nickname?: string;
+  /** 전화번호 */
+  phone: string;
+  /** 이용약관 동의 */
+  agreeTerms: boolean;
+  /** 개인정보처리방침 동의 */
+  agreePrivacy: boolean;
+  /** 마케팅 정보 수신 동의 */
+  agreeMarketing: boolean;
+}
+
+/**
+ * 회원가입 결과 인터페이스
+ * 회원가입 성공 시 서버에서 반환하는 정보입니다.
+ */
+export interface RegisterResult {
+  /** 사용자 고유 식별자 */
+  id: number;
+  /** 이메일 주소 */
+  email: string;
+  /** 닉네임 */
+  nickname: string;
+  /** 계정 생성 일시 */
+  createdAt: string;
 }
 
 /**

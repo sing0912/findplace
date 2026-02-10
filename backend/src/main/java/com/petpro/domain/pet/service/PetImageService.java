@@ -60,10 +60,11 @@ public class PetImageService {
         String objectKey = String.format("pets/%d/profile_%s.%s", petId, UUID.randomUUID(), extension);
 
         try {
+            String safeContentType = CONTENT_TYPE_MAP.getOrDefault(extension.toLowerCase(), "application/octet-stream");
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(objectKey)
-                    .contentType(file.getContentType())
+                    .contentType(safeContentType)
                     .build();
 
             s3Client.putObject(putRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));

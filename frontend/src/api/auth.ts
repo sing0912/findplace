@@ -7,7 +7,7 @@
 
 import apiClient from './client';
 import { ApiResponse } from '../types/api';
-import { LoginRequest, RegisterRequest, TokenResponse, RefreshTokenRequest } from '../types/auth';
+import { LoginRequest, RegisterRequest, RegisterResult, TokenResponse, RefreshTokenRequest } from '../types/auth';
 
 /**
  * 인증 API 객체
@@ -30,13 +30,12 @@ export const authApi = {
 
   /**
    * 새 사용자 계정을 생성합니다.
-   * 회원가입 성공 시 자동으로 로그인되어 토큰이 발급됩니다.
    * @param data - 회원가입 요청 데이터 (이메일, 비밀번호, 이름 등)
-   * @returns 액세스 토큰 및 리프레시 토큰
+   * @returns 회원가입 결과 (id, email, nickname, createdAt)
    * @throws 회원가입 실패 시 에러
    */
-  register: async (data: RegisterRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<ApiResponse<TokenResponse>>('/v1/auth/register', data);
+  register: async (data: RegisterRequest): Promise<RegisterResult> => {
+    const response = await apiClient.post<ApiResponse<RegisterResult>>('/v1/auth/register', data);
     if (response.data.success && response.data.data) {
       return response.data.data;
     }

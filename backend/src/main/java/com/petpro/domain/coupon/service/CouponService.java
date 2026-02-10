@@ -60,7 +60,7 @@ public class CouponService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .couponType(couponType)
-                .discountMethod(request.getDiscountMethod())
+                .discountType(request.getDiscountType())
                 .discountValue(request.getDiscountValue())
                 .maxDiscountAmount(request.getMaxDiscountAmount())
                 .issueType(request.getIssueType())

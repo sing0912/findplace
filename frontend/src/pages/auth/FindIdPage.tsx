@@ -56,7 +56,7 @@ const FindIdPage: React.FC = () => {
 
       navigate('/find-id/verify', {
         state: {
-          verificationId: data.verificationId,
+          requestId: data.requestId,
           name: name.trim(),
           phone: phone.replace(/-/g, ''),
         },

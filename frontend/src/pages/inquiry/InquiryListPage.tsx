@@ -8,80 +8,25 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { InquiryCard } from '../../components/inquiry';
-
-type InquiryStatus = 'WAITING' | 'ANSWERED';
-
-interface Inquiry {
-  id: number;
-  title: string;
-  status: InquiryStatus;
-  createdAt: string;
-}
-
-interface InquiryListResponse {
-  content: Inquiry[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-}
+import { useInquiry } from '../../hooks/useInquiry';
 
 const InquiryListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { inquiries, isLoading, hasMore, fetchInquiries } = useInquiry();
   const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    fetchInquiries();
+    fetchInquiries(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchInquiries = async (pageNum = 0) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch(`/api/v1/inquiries?page=${pageNum}&size=10`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          navigate('/login');
-          return;
-        }
-        throw new Error('문의 목록을 불러오는데 실패했습니다.');
-      }
-
-      const result = await response.json();
-      const data: InquiryListResponse = result.data || result;
-
-      if (pageNum === 0) {
-        setInquiries(data.content ?? []);
-      } else {
-        setInquiries((prev) => [...prev, ...(data.content ?? [])]);
-      }
-
-      setPage(data.number ?? 0);
-      setHasMore((data.number ?? 0) < (data.totalPages ?? 1) - 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleLoadMore = () => {
-    fetchInquiries(page + 1);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchInquiries(nextPage);
   };
 
-  if (isLoading) {
+  if (isLoading && inquiries.length === 0) {
     return (
       <Container maxWidth="sm">
         <Box

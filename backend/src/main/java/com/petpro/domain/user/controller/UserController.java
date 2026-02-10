@@ -25,6 +25,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -46,7 +48,14 @@ public class UserController {
     private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
             "image/jpeg", "image/png", "image/gif", "image/webp"
     );
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "webp");
     private static final long MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final Map<String, byte[]> MAGIC_BYTES = Map.of(
+            "jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "png", new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47},
+            "gif", new byte[]{0x47, 0x49, 0x46, 0x38},
+            "webp", new byte[]{0x52, 0x49, 0x46, 0x46}
+    );
 
     private final UserService userService;
 
@@ -128,13 +137,12 @@ public class UserController {
      */
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다.")
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> deleteMyAccount(
+    public ResponseEntity<Void> deleteMyAccount(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody(required = false) UserRequest.DeleteAccount request) {
         Long userId = Long.parseLong(userDetails.getUsername());
         userService.deleteMyAccount(userId, request != null ? request : UserRequest.DeleteAccount.builder().build());
-        return ResponseEntity.ok(ApiResponse.success(
-                Map.of("success", true, "message", "회원 탈퇴가 완료되었습니다.")));
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -175,13 +183,42 @@ public class UserController {
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
             throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
         }
+        String extension = getFileExtension(file.getOriginalFilename());
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+        }
+        validateMagicBytes(file, extension);
+    }
+
+    private void validateMagicBytes(MultipartFile file, String extension) {
+        String magicKey = "jpeg".equals(extension) ? "jpg" : extension;
+        byte[] expected = MAGIC_BYTES.get(magicKey);
+        if (expected == null) {
+            return;
+        }
+        try (InputStream is = file.getInputStream()) {
+            byte[] header = new byte[expected.length];
+            if (is.read(header) < expected.length) {
+                throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+            }
+            for (int i = 0; i < expected.length; i++) {
+                if (header[i] != expected[i]) {
+                    throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+                }
+            }
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
+        }
     }
 
     private String getFileExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "jpg";
         }
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+        // Path Traversal 방지: 경로 구분자 제거 후 확장자만 추출
+        String safeName = filename.replace("\\", "/");
+        safeName = safeName.substring(safeName.lastIndexOf("/") + 1);
+        return safeName.substring(safeName.lastIndexOf(".") + 1).toLowerCase();
     }
 
     /**
@@ -304,12 +341,12 @@ public class UserController {
     @Operation(summary = "사용자 삭제", description = "사용자를 삭제합니다. (Soft Delete)")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(
+    public ResponseEntity<Void> deleteUser(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long deletedBy = Long.parseLong(userDetails.getUsername());
         userService.deleteUser(id, deletedBy);
-        return ResponseEntity.ok(ApiResponse.success(null, "사용자가 삭제되었습니다."));
+        return ResponseEntity.noContent().build();
     }
 
     /**

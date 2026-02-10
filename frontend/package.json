@@ -31,9 +31,15 @@
   },
   "scripts": {
     "start": "NODE_OPTIONS=--no-deprecation react-scripts start",
-    "build": "NODE_OPTIONS=--no-deprecation react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false NODE_OPTIONS=--no-deprecation react-scripts build",
     "test": "NODE_OPTIONS=--no-deprecation react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:e2e:report": "npx playwright show-report",
+    "audit:check": "npm audit --audit-level=high",
+    "audit:fix": "npm audit fix"
   },
   "eslintConfig": {
     "extends": [
@@ -54,6 +60,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^25.0.10"
   }

@@ -2,6 +2,7 @@ package com.petpro.domain.log.controller;
 
 import com.petpro.domain.log.migration.LogDataMigrationService;
 import com.petpro.domain.log.migration.LogDataMigrationService.MigrationResult;
+import com.petpro.global.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,12 +23,9 @@ public class LogMigrationController {
 
     private final LogDataMigrationService migrationService;
 
-    /**
-     * 로그 데이터 이관 실행
-     */
     @PostMapping("/execute")
-    public ResponseEntity<MigrationResult> executeMigration() {
+    public ResponseEntity<ApiResponse<MigrationResult>> executeMigration() {
         MigrationResult result = migrationService.executeFullMigration();
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

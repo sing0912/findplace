@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -48,8 +50,11 @@ public class AuthController {
 
     @Operation(summary = "로그아웃", description = "로그아웃합니다.")
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<AuthResponse.SuccessMessage>> logout() {
-        // 클라이언트에서 토큰 삭제 처리
+    public ResponseEntity<ApiResponse<AuthResponse.SuccessMessage>> logout(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails != null) {
+            authService.logout(Long.parseLong(userDetails.getUsername()));
+        }
         return ResponseEntity.ok(ApiResponse.success(AuthResponse.SuccessMessage.of("로그아웃되었습니다.")));
     }
 

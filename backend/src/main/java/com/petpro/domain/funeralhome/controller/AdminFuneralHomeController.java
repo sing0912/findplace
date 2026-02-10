@@ -8,6 +8,7 @@ import com.petpro.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,7 +68,7 @@ public class AdminFuneralHomeController {
     public ResponseEntity<ApiResponse<Void>> updateStatus(
             @Parameter(description = "장례식장 ID", required = true)
             @PathVariable Long id,
-            @RequestBody FuneralHomeRequest.StatusUpdate request) {
+            @Valid @RequestBody FuneralHomeRequest.StatusUpdate request) {
 
         funeralHomeService.updateStatus(id, request.getIsActive());
         return ResponseEntity.ok(ApiResponse.success(null));

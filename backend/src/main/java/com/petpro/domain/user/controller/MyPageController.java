@@ -68,7 +68,7 @@ public class MyPageController {
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 요청합니다.")
     public ResponseEntity<ApiResponse<Void>> withdraw(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody WithdrawalRequest request) {
+            @Valid @RequestBody WithdrawalRequest request) {
         Long userId = extractUserId(userDetails);
         userProfileService.withdraw(userId, request.getPassword());
         return ResponseEntity.ok(ApiResponse.success(null));

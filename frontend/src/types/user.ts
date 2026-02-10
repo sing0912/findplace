@@ -8,13 +8,12 @@
 /**
  * 사용자 역할 타입
  * 시스템 내 사용자의 권한 수준을 정의합니다.
- * - USER: 일반 사용자
- * - COMPANY_ADMIN: 장례업체 관리자
- * - SUPPLIER_ADMIN: 공급사 관리자
- * - ADMIN: 시스템 관리자
+ * - CUSTOMER: 반려인
+ * - PARTNER: 펫시터
+ * - ADMIN: 관리자
  * - SUPER_ADMIN: 최고 관리자
  */
-export type UserRole = 'USER' | 'COMPANY_ADMIN' | 'SUPPLIER_ADMIN' | 'ADMIN' | 'SUPER_ADMIN';
+export type UserRole = 'CUSTOMER' | 'PARTNER' | 'ADMIN' | 'SUPER_ADMIN';
 
 /**
  * 사용자 상태 타입

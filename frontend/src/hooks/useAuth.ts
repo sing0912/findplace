@@ -79,15 +79,9 @@ export const useAuth = () => {
    */
   const registerMutation = useMutation({
     mutationFn: authApi.register,
-    onSuccess: async (data) => {
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-
-      const user = await userApi.getMe();
-      setAuth(user, data.accessToken, data.refreshToken);
-
+    onSuccess: () => {
       addNotification({ type: 'success', message: '회원가입에 성공했습니다.' });
-      navigate('/');
+      navigate('/register/complete');
     },
     onError: (error: Error) => {
       addNotification({ type: 'error', message: error.message });

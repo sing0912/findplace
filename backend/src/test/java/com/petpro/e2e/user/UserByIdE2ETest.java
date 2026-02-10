@@ -43,7 +43,8 @@ class UserByIdE2ETest extends BaseE2ETest {
     @Order(2)
     @DisplayName("존재하지 않는 사용자 조회")
     void getUser_notFound() {
-        ResponseEntity<String> response = getWithAuth("/v1/users/999999", userAuth.getAccessToken());
+        // 관리자 토큰 사용: 일반 사용자는 @PreAuthorize에 의해 타인 ID 접근 시 403 반환
+        ResponseEntity<String> response = getWithAuth("/v1/users/999999", adminAuth.getAccessToken());
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(extractField(response.getBody(), "error.code")).isEqualTo("U001");

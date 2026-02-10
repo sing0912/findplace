@@ -2,7 +2,7 @@ package com.petpro.domain.coupon.dto;
 
 import com.petpro.domain.coupon.entity.AutoIssueEvent;
 import com.petpro.domain.coupon.entity.ConditionOperator;
-import com.petpro.domain.coupon.entity.DiscountMethod;
+import com.petpro.domain.coupon.entity.DiscountType;
 import com.petpro.domain.coupon.entity.IssueType;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
@@ -41,7 +41,7 @@ public class CouponRequest {
         private Long couponTypeId;
 
         @NotNull(message = "할인 방식은 필수입니다")
-        private DiscountMethod discountMethod;
+        private DiscountType discountType;
 
         @NotNull(message = "할인 값은 필수입니다")
         @DecimalMin(value = "0", inclusive = false, message = "할인 값은 0보다 커야 합니다")

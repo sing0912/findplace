@@ -8,22 +8,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Container, Typography, Chip, Divider, Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from '@mui/material';
 import { InquiryForm } from '../../components/inquiry';
 import { AuthButton } from '../../components/auth';
+import { inquiryApi, Inquiry } from '../../api/inquiry';
 
 type InquiryStatus = 'WAITING' | 'ANSWERED';
-
-interface InquiryAnswer {
-  content: string;
-  createdAt: string;
-}
-
-interface InquiryDetail {
-  id: number;
-  title: string;
-  content: string;
-  status: InquiryStatus;
-  createdAt: string;
-  answer: InquiryAnswer | null;
-}
 
 const statusConfig: Record<InquiryStatus, { label: string; color: string; bgColor: string }> = {
   WAITING: {
@@ -42,7 +29,7 @@ const InquiryDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
+  const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -58,31 +45,10 @@ const InquiryDetailPage: React.FC = () => {
 
   const fetchInquiry = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          navigate('/mypage/inquiry');
-          return;
-        }
-        throw new Error('문의를 불러오는데 실패했습니다.');
-      }
-
-      const result = await response.json();
-      const data: InquiryDetail = result.data || result;
+      const data = await inquiryApi.getDetail(Number(id));
       setInquiry(data);
       setEditTitle(data.title);
-      setEditContent(data.content);
+      setEditContent(data.content || '');
     } catch (err) {
       console.error(err);
       navigate('/mypage/inquiry');
@@ -98,23 +64,10 @@ const InquiryDetailPage: React.FC = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: editTitle.trim(),
-          content: editContent.trim(),
-        }),
+      await inquiryApi.update(Number(id), {
+        title: editTitle.trim(),
+        content: editContent.trim(),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '수정에 실패했습니다.');
-      }
 
       await fetchInquiry();
       setIsEditing(false);
@@ -127,19 +80,7 @@ const InquiryDetailPage: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '삭제에 실패했습니다.');
-      }
-
+      await inquiryApi.delete(Number(id));
       navigate('/mypage/inquiry');
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -177,7 +118,7 @@ const InquiryDetailPage: React.FC = () => {
 
   if (!inquiry) return null;
 
-  const statusInfo = statusConfig[inquiry.status] || statusConfig.WAITING;
+  const statusInfo = statusConfig[inquiry.status as InquiryStatus] || statusConfig.WAITING;
   const canEdit = inquiry.status === 'WAITING';
 
   return (
@@ -227,7 +168,7 @@ const InquiryDetailPage: React.FC = () => {
                   onClick={() => {
                     setIsEditing(false);
                     setEditTitle(inquiry.title);
-                    setEditContent(inquiry.content);
+                    setEditContent(inquiry.content || '');
                   }}
                   fullWidth
                 >

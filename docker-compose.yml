@@ -15,7 +15,7 @@ services:
       - ./docker/postgres/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
       - ./docker/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     command: >
       postgres
       -c wal_level=replica
@@ -47,7 +47,7 @@ services:
       - postgres-slave1-data:/var/lib/postgresql/data
       - ./docker/postgres/init-slave.sh:/init-slave.sh
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -86,7 +86,7 @@ services:
       - postgres-slave2-data:/var/lib/postgresql/data
       - ./docker/postgres/init-slave.sh:/init-slave.sh
     ports:
-      - "5434:5432"
+      - "127.0.0.1:5434:5432"
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -123,7 +123,7 @@ services:
     volumes:
       - postgres-coupon-data:/var/lib/postgresql/data
     ports:
-      - "5435:5432"
+      - "127.0.0.1:5435:5432"
     networks:
       - petpro-network
     healthcheck:
@@ -136,19 +136,20 @@ services:
   # MySQL Log Master (로그 DB)
   # ============================================================
   mysql-log-master:
-    image: mysql:8.0.36-debian
+    image: mysql:8.0
     container_name: petpro-mysql-log-master
     environment:
       MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: petpro_log
       MYSQL_USER: ${LOG_DB_USERNAME:-loguser}
       MYSQL_PASSWORD: ${LOG_DB_PASSWORD}
+      MYSQL_REPL_PASSWORD: ${MYSQL_REPL_PASSWORD}
     volumes:
       - mysql-log-master-data:/var/lib/mysql
       - ./docker/mysql-log/master/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-      - ./docker/mysql-log/master/init-master.sql:/docker-entrypoint-initdb.d/init-master.sql:ro
+      - ./docker/mysql-log/master/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh:ro
     ports:
-      - "${LOG_DB_MASTER_PORT:-3306}:3306"
+      - "127.0.0.1:${LOG_DB_MASTER_PORT:-3306}:3306"
     command: >
       --server-id=1
       --log-bin=mysql-bin
@@ -170,17 +171,18 @@ services:
   # MySQL Log Slave (로그 DB 읽기 전용)
   # ============================================================
   mysql-log-slave:
-    image: mysql:8.0.36-debian
+    image: mysql:8.0
     container_name: petpro-mysql-log-slave
     environment:
       MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: petpro_log
+      MYSQL_REPL_PASSWORD: ${MYSQL_REPL_PASSWORD}
     volumes:
       - mysql-log-slave-data:/var/lib/mysql
       - ./docker/mysql-log/slave/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-      - ./docker/mysql-log/slave/init-slave.sql:/docker-entrypoint-initdb.d/init-slave.sql:ro
+      - ./docker/mysql-log/slave/init-slave.sh:/docker-entrypoint-initdb.d/init-slave.sh:ro
     ports:
-      - "${LOG_DB_SLAVE_PORT:-3307}:3306"
+      - "127.0.0.1:${LOG_DB_SLAVE_PORT:-3307}:3306"
     command: >
       --server-id=2
       --gtid-mode=ON
@@ -209,7 +211,7 @@ services:
     volumes:
       - redis-data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     networks:
       - petpro-network
     healthcheck:
@@ -230,8 +232,8 @@ services:
     volumes:
       - minio-data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     command: server /data --console-address ":9001"
     networks:
       - petpro-network
@@ -254,7 +256,8 @@ services:
     command: >
       "mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
        mc mb myminio/petpro --ignore-existing &&
-       mc anonymous set public myminio/petpro/public &&
+       mc anonymous set download myminio/petpro/pets &&
+       mc anonymous set download myminio/petpro/public &&
        echo 'MinIO bucket initialized'"
     networks:
       - petpro-network
@@ -290,7 +293,7 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -314,7 +317,7 @@ services:
       - ./docker/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - loki-data:/loki
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - petpro-network
@@ -349,10 +352,10 @@ services:
       - ./docker/tempo/tempo-config.yml:/etc/tempo/tempo.yaml:ro
       - tempo-data:/tmp/tempo
     ports:
-      - "3200:3200"   # HTTP
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-      - "9411:9411"   # Zipkin
+      - "127.0.0.1:3200:3200"   # HTTP
+      - "127.0.0.1:4317:4317"   # OTLP gRPC
+      - "127.0.0.1:4318:4318"   # OTLP HTTP
+      - "127.0.0.1:9411:9411"   # Zipkin
     command: -config.file=/etc/tempo/tempo.yaml
     depends_on:
       - prometheus
@@ -380,7 +383,7 @@ services:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     depends_on:
       - prometheus
       - loki

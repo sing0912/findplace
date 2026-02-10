@@ -82,12 +82,12 @@ public class PetController {
 
     @Operation(summary = "반려동물 삭제")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deletePet(
+    public ResponseEntity<Void> deletePet(
             @Parameter(description = "반려동물 ID") @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = extractUserId(userDetails);
         petService.deletePet(id, userId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "사망 처리")

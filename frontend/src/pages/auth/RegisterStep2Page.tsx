@@ -7,52 +7,67 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Container, Typography, Alert } from '@mui/material';
 import { AuthInput, AuthButton } from '../../components/auth';
+import { authApi } from '../../api/auth';
 
 interface FormData {
   email: string;
   password: string;
   passwordConfirm: string;
+  name: string;
   nickname: string;
+  phone: string;
 }
 
 interface FormErrors {
   email: string;
   password: string;
   passwordConfirm: string;
+  name: string;
   nickname: string;
+  phone: string;
 }
 
 interface FormValid {
   email: boolean;
   password: boolean;
   passwordConfirm: boolean;
+  name: boolean;
   nickname: boolean;
+  phone: boolean;
 }
 
 const RegisterStep2Page: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const marketingAgreed = location.state?.marketingAgreed ?? false;
+  const agreeTerms = location.state?.agreeTerms ?? false;
+  const agreePrivacy = location.state?.agreePrivacy ?? false;
+  const agreeMarketing = location.state?.agreeMarketing ?? false;
 
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     passwordConfirm: '',
+    name: '',
     nickname: '',
+    phone: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({
     email: '',
     password: '',
     passwordConfirm: '',
+    name: '',
     nickname: '',
+    phone: '',
   });
 
   const [valid, setValid] = useState<FormValid>({
     email: false,
     password: false,
     passwordConfirm: false,
+    name: false,
     nickname: false,
+    phone: false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -87,6 +102,15 @@ const RegisterStep2Page: React.FC = () => {
     return '';
   };
 
+  // 이름 유효성 검사
+  const validateName = (name: string): string => {
+    if (!name) return '';
+    if (name.length < 2 || name.length > 20) {
+      return '이름은 2-20자여야 합니다.';
+    }
+    return '';
+  };
+
   // 닉네임 유효성 검사
   const validateNickname = (nickname: string): string => {
     if (!nickname) return '';
@@ -94,6 +118,24 @@ const RegisterStep2Page: React.FC = () => {
       return '닉네임은 2-20자여야 합니다.';
     }
     return '';
+  };
+
+  // 전화번호 유효성 검사
+  const validatePhone = (phone: string): string => {
+    if (!phone) return '';
+    const phoneNumber = phone.replace(/-/g, '');
+    if (phoneNumber.length !== 11) {
+      return '올바른 휴대폰 번호를 입력해주세요.';
+    }
+    return '';
+  };
+
+  // 전화번호 포맷
+  const formatPhoneNumber = (value: string): string => {
+    const numbers = value.replace(/[^\d]/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
   };
 
   // 이메일 중복 확인
@@ -119,7 +161,10 @@ const RegisterStep2Page: React.FC = () => {
   };
 
   const handleChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if (field === 'phone') {
+      value = formatPhoneNumber(value);
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
     setServerError('');
   };
@@ -154,6 +199,10 @@ const RegisterStep2Page: React.FC = () => {
         error = validatePasswordConfirm(formData.password, formData.passwordConfirm);
         isValid = !error && !!formData.passwordConfirm;
         break;
+      case 'name':
+        error = validateName(formData.name);
+        isValid = !error && !!formData.name;
+        break;
       case 'nickname':
         error = validateNickname(formData.nickname);
         if (!error && formData.nickname) {
@@ -165,13 +214,17 @@ const RegisterStep2Page: React.FC = () => {
           }
         }
         break;
+      case 'phone':
+        error = validatePhone(formData.phone);
+        isValid = !error && !!formData.phone;
+        break;
     }
 
     setErrors((prev) => ({ ...prev, [field]: error }));
     setValid((prev) => ({ ...prev, [field]: isValid }));
   };
 
-  const isFormValid = valid.email && valid.password && valid.passwordConfirm && valid.nickname;
+  const isFormValid = valid.email && valid.password && valid.passwordConfirm && valid.name && valid.nickname && valid.phone;
 
   const handleSubmit = async () => {
     if (!isFormValid) return;
@@ -180,27 +233,20 @@ const RegisterStep2Page: React.FC = () => {
     setServerError('');
 
     try {
-      const response = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          nickname: formData.nickname,
-          marketingAgreed,
-        }),
+      await authApi.register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        nickname: formData.nickname,
+        phone: formData.phone.replace(/-/g, ''),
+        agreeTerms,
+        agreePrivacy,
+        agreeMarketing,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '회원가입에 실패했습니다.');
-      }
 
       navigate('/register/complete');
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+      setServerError(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -284,6 +330,21 @@ const RegisterStep2Page: React.FC = () => {
           />
 
           <AuthInput
+            label="이름"
+            name="name"
+            type="text"
+            placeholder="이름을 입력해주세요"
+            value={formData.name}
+            onChange={handleChange('name')}
+            onBlur={handleBlur('name')}
+            error={!!errors.name}
+            helperText={errors.name}
+            isValid={valid.name}
+            required
+            autoComplete="name"
+          />
+
+          <AuthInput
             label="닉네임"
             name="nickname"
             type="text"
@@ -296,6 +357,21 @@ const RegisterStep2Page: React.FC = () => {
             isValid={valid.nickname}
             required
             autoComplete="nickname"
+          />
+
+          <AuthInput
+            label="휴대폰 번호"
+            name="phone"
+            type="tel"
+            placeholder="010-0000-0000"
+            value={formData.phone}
+            onChange={handleChange('phone')}
+            onBlur={handleBlur('phone')}
+            error={!!errors.phone}
+            helperText={errors.phone}
+            isValid={valid.phone}
+            required
+            autoComplete="tel"
           />
         </Box>
 

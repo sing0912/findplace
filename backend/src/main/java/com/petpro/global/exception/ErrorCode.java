@@ -55,6 +55,8 @@ public enum ErrorCode {
     VERIFICATION_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "A007", "인증번호가 일치하지 않습니다."),
     /** 인증되지 않은 요청 (인증번호 미확인) */
     VERIFICATION_REQUIRED(HttpStatus.BAD_REQUEST, "A008", "인증번호 확인이 필요합니다."),
+    /** 인증번호 시도 횟수 초과 */
+    VERIFICATION_MAX_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "A010", "인증번호 시도 횟수를 초과했습니다. 새로운 인증번호를 요청해주세요."),
     /** 소셜 로그인 사용자 */
     SOCIAL_LOGIN_USER(HttpStatus.BAD_REQUEST, "A009", "소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다."),
     /** 필수 약관 미동의 */

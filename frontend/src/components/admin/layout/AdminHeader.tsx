@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -21,12 +22,14 @@ import {
   Menu as MenuIcon,
   AccountCircle,
   Logout,
+  Person,
 } from '@mui/icons-material';
 import { useAuthStore } from '../../../stores/authStore';
 import { useUIStore } from '../../../stores/uiStore';
 import { useAdminAuth } from '../../../hooks/useAdminAuth';
 
 const AdminHeader: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { toggleSidebar } = useUIStore();
   const { logout } = useAdminAuth();
@@ -39,6 +42,11 @@ const AdminHeader: React.FC = () => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleMyPage = () => {
+    handleClose();
+    navigate('/admin/settings/profile');
   };
 
   const handleLogout = () => {
@@ -103,6 +111,10 @@ const AdminHeader: React.FC = () => {
                 </Typography>
               </MenuItem>
               <Divider />
+              <MenuItem onClick={handleMyPage}>
+                <Person fontSize="small" sx={{ mr: 1 }} />
+                마이페이지
+              </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Logout fontSize="small" sx={{ mr: 1 }} />
                 로그아웃

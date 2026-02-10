@@ -2,6 +2,7 @@ package com.petpro.domain.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -47,9 +48,11 @@ public class AuthRequest {
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         private String email;
 
-        /** 비밀번호 (필수, 8~50자) */
+        /** 비밀번호 (필수, 8~50자, 영문+숫자+특수문자) */
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Size(min = 8, max = 50, message = "비밀번호는 8자 이상 50자 이하여야 합니다.")
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.")
         private String password;
 
         /** 이름 (필수, 최대 100자) */
@@ -62,8 +65,9 @@ public class AuthRequest {
         @Size(max = 50, message = "닉네임은 50자 이하여야 합니다.")
         private String nickname;
 
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
 
         /** 이용약관 동의 (필수) */
@@ -84,8 +88,9 @@ public class AuthRequest {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor
     public static class SendVerification {
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
     }
 
@@ -97,8 +102,9 @@ public class AuthRequest {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor
     public static class VerifyCode {
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
 
         /** 인증번호 (필수, 6자리) */
@@ -115,13 +121,16 @@ public class AuthRequest {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor
     public static class ResetPassword {
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
 
-        /** 새 비밀번호 (필수, 8~50자) */
+        /** 새 비밀번호 (필수, 8~50자, 영문+숫자+특수문자) */
         @NotBlank(message = "새 비밀번호는 필수입니다.")
         @Size(min = 8, max = 50, message = "비밀번호는 8자 이상 50자 이하여야 합니다.")
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.")
         private String newPassword;
     }
 
@@ -165,8 +174,9 @@ public class AuthRequest {
         @NotBlank(message = "이름은 필수입니다.")
         private String name;
 
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
     }
 
@@ -214,8 +224,9 @@ public class AuthRequest {
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         private String email;
 
-        /** 전화번호 (필수) */
+        /** 전화번호 (필수, 한국 휴대전화 형식) */
         @NotBlank(message = "전화번호는 필수입니다.")
+        @Pattern(regexp = "^01[016789]\\d{7,8}$", message = "올바른 휴대전화 번호 형식이 아닙니다.")
         private String phone;
     }
 
@@ -231,9 +242,11 @@ public class AuthRequest {
         @NotBlank(message = "토큰은 필수입니다.")
         private String token;
 
-        /** 새 비밀번호 (필수, 8~50자) */
+        /** 새 비밀번호 (필수, 8~50자, 영문+숫자+특수문자) */
         @NotBlank(message = "새 비밀번호는 필수입니다.")
         @Size(min = 8, max = 50, message = "비밀번호는 8자 이상 50자 이하여야 합니다.")
+        @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "비밀번호는 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.")
         private String newPassword;
     }
 }

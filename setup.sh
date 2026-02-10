@@ -37,6 +37,9 @@ PROD_MODE=false
 # 사용하는 포트 목록
 REQUIRED_PORTS=(80 443 3000 5432 5433 5434 6379 8080 9000 9001)
 
+# 방화벽 보안 스크립트 로드
+FIREWALL_SCRIPT="$PROJECT_ROOT/scripts/secure-firewall.sh"
+
 #-------------------------------------------------------------------------------
 # 유틸리티 함수
 #-------------------------------------------------------------------------------
@@ -80,6 +83,54 @@ get_container_runtime() {
         echo "docker"
     else
         echo ""
+    fi
+}
+
+# Podman Machine 상태 확인 및 재시작 (macOS)
+ensure_podman_running() {
+    if ! check_command podman; then
+        return 0
+    fi
+
+    # podman ps로 실제 연결 가능 여부 확인
+    if podman ps &>/dev/null; then
+        return 0
+    fi
+
+    print_warning "Podman 소켓 연결 불가 - Machine 재시작 시도 중..."
+
+    # 기존 Machine 중지 후 재시작
+    podman machine stop 2>/dev/null || true
+    sleep 2
+
+    if podman machine start 2>/dev/null; then
+        print_success "Podman Machine 재시작 완료"
+        # 소켓 준비 대기
+        for i in {1..10}; do
+            if podman ps &>/dev/null; then
+                print_success "Podman 연결 확인 완료"
+                return 0
+            fi
+            sleep 2
+        done
+        print_error "Podman Machine 시작 후에도 연결 불가"
+        print_info "수동 복구: podman machine rm -f && podman machine init --cpus 4 --memory 4096 && podman machine start"
+        exit 1
+    else
+        # Machine이 없으면 새로 생성
+        print_warning "Podman Machine 시작 실패 - 새로 생성 중..."
+        podman machine rm -f 2>/dev/null || true
+        podman machine init --cpus 4 --memory 4096
+        podman machine start
+        sleep 3
+
+        if podman ps &>/dev/null; then
+            print_success "Podman Machine 생성 및 시작 완료"
+            return 0
+        else
+            print_error "Podman Machine 초기화 실패"
+            exit 1
+        fi
     fi
 }
 
@@ -387,7 +438,10 @@ start_services() {
         exit 1
     fi
 
-    # 프로덕션 모드 시 SSL 인증서 확인
+    # Podman Machine 연결 확인 (macOS)
+    ensure_podman_running
+
+    # 프로덕션 모드 시 SSL 인증서 확인 및 방화벽 보안 적용
     if [ "$PROD_MODE" = true ]; then
         local prod_domain="${PROD_DOMAIN:-dev.findplace.co.kr}"
         if [ ! -f "/etc/letsencrypt/live/${prod_domain}/fullchain.pem" ]; then
@@ -398,6 +452,15 @@ start_services() {
         # certbot 갱신용 디렉토리 생성
         sudo mkdir -p /var/www/certbot
         print_success "SSL 인증서 확인 완료"
+
+        # 방화벽 보안 적용
+        if [ -f "$FIREWALL_SCRIPT" ]; then
+            print_info "방화벽 보안 설정 적용 중..."
+            source "$FIREWALL_SCRIPT"
+            apply_firewall_security
+        else
+            print_warning "방화벽 보안 스크립트를 찾을 수 없습니다: $FIREWALL_SCRIPT"
+        fi
     fi
 
     # 포트 정리
@@ -412,7 +475,7 @@ start_services() {
     # 기존 컨테이너 정리
     print_info "기존 컨테이너 정리 중..."
     cd "$PROJECT_ROOT"
-    $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
+    $COMPOSE_CMD -f docker-compose.yml down --remove-orphans 2>/dev/null || true
 
     # 1. 인프라 서비스 시작 (docker-compose는 .env 자동 로드)
     print_info "인프라 서비스 시작 중..."
@@ -420,7 +483,7 @@ start_services() {
     if [ "$PROD_MODE" = true ]; then
         $COMPOSE_CMD -f docker-compose.yml -f docker-compose.prod.yml up -d
     else
-        $COMPOSE_CMD up -d
+        $COMPOSE_CMD -f docker-compose.yml up -d
     fi
 
     # 인프라 준비 대기
@@ -452,12 +515,12 @@ start_services() {
 
     # Gradle 빌드
     print_info "Gradle 빌드 중..."
-    ./gradlew build -x test --no-daemon 2>&1 | tail -20
+    ./gradlew build -x test --no-daemon --console=plain < /dev/null 2>&1 | tail -20
 
     # 백엔드 실행 (환경 변수는 load_env에서 이미 export됨)
     print_info "백엔드 서버 시작 중..."
     mkdir -p "$PROJECT_ROOT/logs"
-    nohup ./gradlew bootRun --no-daemon > "$PROJECT_ROOT/logs/backend.log" 2>&1 &
+    nohup ./gradlew bootRun --no-daemon --console=plain < /dev/null > "$PROJECT_ROOT/logs/backend.log" 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > /tmp/petpro-backend.pid
     cd "$PROJECT_ROOT"
@@ -641,6 +704,16 @@ check_status() {
         print_success "프론트엔드: 실행 중 (http://localhost:3000)"
     else
         print_warning "프론트엔드: 중지됨"
+    fi
+
+    # 방화벽 보안 상태
+    echo ""
+    echo -e "${BLUE}[포트 보안]${NC}"
+    if [ -f "$FIREWALL_SCRIPT" ]; then
+        source "$FIREWALL_SCRIPT"
+        check_firewall_security
+    else
+        print_warning "방화벽 보안 스크립트를 찾을 수 없습니다"
     fi
 
     echo ""
