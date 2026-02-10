@@ -1,5 +1,6 @@
 package com.petpro.global.controller;
 
+import com.petpro.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -17,23 +18,20 @@ import java.util.Map;
  *
  * 제공 엔드포인트:
  * - GET /health: 서버 상태 및 현재 시간 반환
+ *
+ * 참고: /health 경로는 nginx 헬스체크 등 인프라에서 참조하므로 /v1/ 접두사를 적용하지 않음
  */
 @Tag(name = "Health", description = "Health Check API")
 @RestController
 public class HealthController {
 
-    /**
-     * 서버 상태를 확인합니다.
-     * 서버가 정상 동작 중이면 "UP" 상태와 현재 타임스탬프를 반환합니다.
-     *
-     * @return 서버 상태 정보 (status: "UP", timestamp: 현재 시간)
-     */
     @Operation(summary = "Health Check", description = "서버 상태를 확인합니다.")
     @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> health() {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> health() {
+        Map<String, Object> data = Map.of(
                 "status", "UP",
                 "timestamp", LocalDateTime.now().toString()
-        ));
+        );
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

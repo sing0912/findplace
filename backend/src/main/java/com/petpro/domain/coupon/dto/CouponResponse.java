@@ -47,7 +47,7 @@ public class CouponResponse {
         private String name;
         private String description;
         private TypeItem couponType;
-        private DiscountMethod discountMethod;
+        private DiscountType discountType;
         private BigDecimal discountValue;
         private String discountText;
         private BigDecimal maxDiscountAmount;
@@ -73,7 +73,7 @@ public class CouponResponse {
                     .description(coupon.getDescription())
                     .couponType(coupon.getCouponType() != null
                             ? TypeItem.from(coupon.getCouponType()) : null)
-                    .discountMethod(coupon.getDiscountMethod())
+                    .discountType(coupon.getDiscountType())
                     .discountValue(coupon.getDiscountValue())
                     .discountText(coupon.getDiscountText())
                     .maxDiscountAmount(coupon.getMaxDiscountAmount())

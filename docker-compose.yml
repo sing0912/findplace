@@ -136,7 +136,7 @@ services:
   # MySQL Log Master (로그 DB)
   # ============================================================
   mysql-log-master:
-    image: mysql:8.0.36-debian
+    image: mysql:8.0
     container_name: petpro-mysql-log-master
     environment:
       MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}
@@ -171,7 +171,7 @@ services:
   # MySQL Log Slave (로그 DB 읽기 전용)
   # ============================================================
   mysql-log-slave:
-    image: mysql:8.0.36-debian
+    image: mysql:8.0
     container_name: petpro-mysql-log-slave
     environment:
       MYSQL_ROOT_PASSWORD: ${LOG_DB_ROOT_PASSWORD}

@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "Region", description = "지역 코드 API")
 @RestController
-@RequestMapping("/regions")
+@RequestMapping("/v1/regions")
 @RequiredArgsConstructor
 public class RegionController {
 

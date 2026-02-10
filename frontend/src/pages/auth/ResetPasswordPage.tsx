@@ -61,7 +61,7 @@ const ResetPasswordPage: React.FC = () => {
 
       navigate('/reset-password/verify', {
         state: {
-          verificationId: data.verificationId,
+          requestId: data.requestId,
           email,
           phone: phone.replace(/-/g, ''),
         },

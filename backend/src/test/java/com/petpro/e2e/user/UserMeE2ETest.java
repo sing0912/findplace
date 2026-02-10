@@ -96,7 +96,9 @@ class UserMeE2ETest extends BaseE2ETest {
     @DisplayName("프로필 이미지 업로드 성공")
     void uploadProfileImage_success() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(new byte[]{1, 2, 3, 4}) {
+        // PNG magic bytes (0x89 0x50 0x4E 0x47) + padding
+        byte[] pngContent = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+        body.add("file", new ByteArrayResource(pngContent) {
             @Override
             public String getFilename() {
                 return "test-image.png";
@@ -183,7 +185,6 @@ class UserMeE2ETest extends BaseE2ETest {
         ResponseEntity<String> response = deleteWithAuthAndBody(
                 "/v1/users/me", body, deleteUser.getAccessToken());
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(extractField(response.getBody(), "success")).isEqualTo("true");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 }

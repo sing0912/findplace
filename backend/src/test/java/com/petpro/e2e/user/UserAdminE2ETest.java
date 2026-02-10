@@ -217,7 +217,7 @@ class UserAdminE2ETest extends BaseE2ETest {
         ResponseEntity<String> response = deleteWithAuth(
                 "/v1/users/" + deleteTarget.getUserId(), adminAuth.getAccessToken());
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // 삭제 후 조회하면 404
         ResponseEntity<String> getResponse = getWithAuth(

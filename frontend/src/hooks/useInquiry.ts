@@ -4,39 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-
-type InquiryStatus = 'WAITING' | 'ANSWERED';
-
-interface InquiryAnswer {
-  content: string;
-  createdAt: string;
-}
-
-interface Inquiry {
-  id: number;
-  title: string;
-  content?: string;
-  status: InquiryStatus;
-  createdAt: string;
-  answer?: InquiryAnswer | null;
-}
-
-interface InquiryListResponse {
-  content: Inquiry[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-}
-
-interface CreateInquiryRequest {
-  title: string;
-  content: string;
-}
-
-interface UpdateInquiryRequest {
-  title: string;
-  content: string;
-}
+import { inquiryApi, Inquiry, CreateInquiryRequest, UpdateInquiryRequest } from '../api/inquiry';
 
 interface UseInquiryReturn {
   inquiries: Inquiry[];
@@ -58,29 +26,13 @@ export const useInquiry = (): UseInquiryReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-
-  const getAuthHeader = (): HeadersInit => {
-    const token = localStorage.getItem('accessToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
 
   const fetchInquiries = useCallback(async (page = 0) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/v1/inquiries?page=${page}&size=10`, {
-        headers: {
-          ...getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('문의 목록을 불러오는데 실패했습니다.');
-      }
-
-      const data: InquiryListResponse = await response.json();
+      const data = await inquiryApi.getList(page);
 
       if (page === 0) {
         setInquiries(data.content);
@@ -88,7 +40,6 @@ export const useInquiry = (): UseInquiryReturn => {
         setInquiries((prev) => [...prev, ...data.content]);
       }
 
-      setCurrentPage(data.number);
       setHasMore(data.number < data.totalPages - 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -102,17 +53,7 @@ export const useInquiry = (): UseInquiryReturn => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        headers: {
-          ...getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('문의를 불러오는데 실패했습니다.');
-      }
-
-      const data: Inquiry = await response.json();
+      const data = await inquiryApi.getDetail(id);
       setCurrentInquiry(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
@@ -126,21 +67,7 @@ export const useInquiry = (): UseInquiryReturn => {
     setError(null);
 
     try {
-      const response = await fetch('/api/v1/inquiries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '문의 작성에 실패했습니다.');
-      }
-
-      const inquiry: Inquiry = await response.json();
+      const inquiry = await inquiryApi.create(data);
       return inquiry;
     } catch (err) {
       const message = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
@@ -156,21 +83,7 @@ export const useInquiry = (): UseInquiryReturn => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '문의 수정에 실패했습니다.');
-      }
-
-      const inquiry: Inquiry = await response.json();
+      const inquiry = await inquiryApi.update(id, data);
       setCurrentInquiry(inquiry);
       return inquiry;
     } catch (err) {
@@ -187,18 +100,7 @@ export const useInquiry = (): UseInquiryReturn => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/v1/inquiries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '문의 삭제에 실패했습니다.');
-      }
-
+      await inquiryApi.delete(id);
       setInquiries((prev) => prev.filter((i) => i.id !== id));
       setCurrentInquiry(null);
     } catch (err) {

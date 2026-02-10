@@ -71,6 +71,9 @@ public void expireCoupons() {
 ```
 
 ### 3.3 장례식장 동기화 (02:00)
+
+> **참고**: FuneralHomeSyncJob은 `batch` 패키지가 아닌 `funeralhome.scheduler` 패키지(`FuneralHomeSyncScheduler`)에 구현되어 있습니다.
+
 ```java
 @Scheduled(cron = "0 0 2 * * *")
 public void syncFuneralHomes() {

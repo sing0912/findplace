@@ -45,7 +45,7 @@ public class CouponController {
     }
 
     @Operation(summary = "쿠폰 코드 등록", description = "쿠폰 코드를 입력하여 쿠폰을 등록합니다")
-    @PostMapping("/register")
+    @PostMapping("/redeem")
     public ResponseEntity<ApiResponse<CouponResponse.MyCoupon>> registerCoupon(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CouponRequest.RegisterCode request) {

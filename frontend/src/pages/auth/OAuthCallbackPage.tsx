@@ -67,7 +67,7 @@ const OAuthCallbackPage: React.FC = () => {
             email: data.user.email,
             name: data.user.nickname || data.user.email.split('@')[0],
             profileImageUrl: data.user.profileImageUrl,
-            role: 'USER',
+            role: 'CUSTOMER',
             status: 'ACTIVE',
             createdAt: now,
             updatedAt: now,

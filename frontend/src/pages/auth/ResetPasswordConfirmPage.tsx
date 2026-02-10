@@ -12,7 +12,7 @@ import { AuthInput, AuthButton } from '../../components/auth';
 const ResetPasswordConfirmPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { resetToken } = location.state || {};
+  const { token } = location.state || {};
 
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -26,10 +26,10 @@ const ResetPasswordConfirmPage: React.FC = () => {
   const [confirmValid, setConfirmValid] = useState(false);
 
   useEffect(() => {
-    if (!resetToken) {
+    if (!token) {
       navigate('/reset-password');
     }
-  }, [resetToken, navigate]);
+  }, [token, navigate]);
 
   const validatePassword = (value: string): string => {
     if (!value) return '';
@@ -79,7 +79,7 @@ const ResetPasswordConfirmPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          resetToken,
+          token,
           newPassword: password,
         }),
       });

@@ -1,6 +1,8 @@
 # 실서비스 환경 세팅 가이드
 
-이 문서는 PetPro 프로젝트를 새로운 서버에 배포할 때 발생할 수 있는 문제들과 해결 방법을 정리한 가이드입니다.
+이 문서는 PetPro 프로젝트를 새로운 서버에 **초기 설정**할 때 발생할 수 있는 문제들과 해결 방법을 정리한 가이드입니다.
+
+> **운영 중 이슈/개선 사항**은 [production-operation-guide.md](./production-operation-guide.md)를 참조하세요.
 
 ## 목차
 
@@ -248,23 +250,23 @@ nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 
 ---
 
-### 3.9 방화벽 포트 차단
+### 3.9 방화벽 포트 설정
 
 **증상:** 외부에서 서비스 접속 불가
 
 **해결:**
 ```bash
-# 필요한 포트 열기
+# ⚠️ 외부 노출이 필요한 포트만 열기 (HTTP/HTTPS만)
 firewall-cmd --permanent --add-port=80/tcp
-firewall-cmd --permanent --add-port=3000/tcp
-firewall-cmd --permanent --add-port=8080/tcp
-firewall-cmd --permanent --add-port=9000/tcp
-firewall-cmd --permanent --add-port=9001/tcp
+firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
-
-# 또는 방화벽 임시 중지 (테스트용)
-systemctl stop firewalld
 ```
+
+> **⛔ 보안 주의사항:**
+> - 데이터베이스 포트(5432-5435, 3306-3307), Redis(6379), MinIO(9000/9001), 모니터링(9090, 3001, 3100, 3200) 포트는 **절대 방화벽에서 열지 마세요**
+> - `docker-compose.yml`에서 이미 `127.0.0.1`로 바인딩되어 외부 접근이 차단됩니다
+> - `systemctl stop firewalld`는 **절대 금지** — 모든 포트가 외부에 노출됩니다
+> - 모니터링 대시보드(Grafana) 접근이 필요하면 SSH 터널링을 사용하세요: `ssh -L 3001:localhost:3001 user@server`
 
 ---
 
@@ -319,18 +321,22 @@ nohup npm start > /tmp/petpro-frontend.log 2>&1 &
 
 ## 5. 외부 접속 설정
 
-### 접속 URL (예: 서버 IP가 1.234.5.95인 경우)
+### 접속 URL (프로덕션 - SSL 설정 후)
 
-| 서비스 | URL |
-|--------|-----|
-| 프론트엔드 | http://1.234.5.95:3000 |
-| 백엔드 API | http://1.234.5.95:8080/api |
-| Swagger UI | http://1.234.5.95:8080/api/swagger-ui.html |
-| MinIO Console | http://1.234.5.95:9001 |
+| 서비스 | URL | 비고 |
+|--------|-----|------|
+| 웹 서비스 | https://dev.findplace.co.kr | Nginx 리버스 프록시 |
+| API | https://dev.findplace.co.kr/api | Nginx 경유 |
 
-### MinIO 로그인 정보
-- Username: `.env` 파일의 `MINIO_ACCESS_KEY` 값
-- Password: `.env` 파일의 `MINIO_SECRET_KEY` 값
+### 내부 전용 서비스 (SSH 터널링으로 접근)
+
+| 서비스 | 로컬 포트 | SSH 터널 명령 |
+|--------|----------|--------------|
+| Grafana | 3001 | `ssh -L 3001:localhost:3001 user@server` |
+| MinIO Console | 9001 | `ssh -L 9001:localhost:9001 user@server` |
+| Prometheus | 9090 | `ssh -L 9090:localhost:9090 user@server` |
+
+> **⛔ 보안 주의:** 데이터베이스(PostgreSQL, MySQL, Redis), MinIO, 모니터링 스택은 `127.0.0.1`에만 바인딩되어 외부에서 직접 접근 불가합니다. 반드시 SSH 터널링을 사용하세요.
 
 ---
 
@@ -462,8 +468,8 @@ docker logs petpro-minio
 - [ ] Git 설치됨
 - [ ] Docker 설치 및 실행 중
 - [ ] docker-compose 설치됨
-- [ ] 포트 80, 443, 3000, 8080, 9000, 9001 사용 가능
-- [ ] 방화벽 포트 열림
+- [ ] 포트 80, 443 사용 가능
+- [ ] 방화벽에서 80, 443만 개방 (DB/Redis/모니터링 포트는 열지 않음)
 - [ ] gradle-wrapper.jar 존재
 - [ ] frontend/.env 파일 생성됨
 

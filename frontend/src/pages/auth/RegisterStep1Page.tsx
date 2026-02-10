@@ -45,7 +45,11 @@ const RegisterStep1Page: React.FC = () => {
 
   const handleNext = () => {
     navigate('/register/info', {
-      state: { marketingAgreed: agreements.marketing },
+      state: {
+        agreeTerms: agreements.terms,
+        agreePrivacy: agreements.privacy,
+        agreeMarketing: agreements.marketing,
+      },
     });
   };
 

@@ -17,11 +17,17 @@ cd "$SCRIPT_DIR"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 log()   { echo -e "${GREEN}[배포]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[경고]${NC} $1"; }
 error() { echo -e "${RED}[오류]${NC} $1"; exit 1; }
+
+# ----------------------------------------
+# 방화벽 보안 스크립트 로드
+# ----------------------------------------
+FIREWALL_SCRIPT="$SCRIPT_DIR/scripts/secure-firewall.sh"
 
 # ----------------------------------------
 # .env 로드
@@ -177,11 +183,23 @@ log "nginx 재시작 중..."
 $COMPOSE_CMD -f docker-compose.yml -f docker-compose.prod.yml restart nginx
 
 # ----------------------------------------
+# 방화벽 보안 설정 적용
+# ----------------------------------------
+if [ -f "$FIREWALL_SCRIPT" ]; then
+    log "방화벽 보안 설정 적용 중..."
+    source "$FIREWALL_SCRIPT"
+    apply_firewall_security
+else
+    warn "방화벽 보안 스크립트를 찾을 수 없습니다: $FIREWALL_SCRIPT"
+    warn "수동으로 방화벽에서 80, 443만 허용하고 나머지 포트를 차단해주세요."
+fi
+
+# ----------------------------------------
 # 완료
 # ----------------------------------------
 log "=========================================="
 log "배포 완료! (Release: ${TAG_NAME})"
 log "=========================================="
-log "  백엔드:     http://localhost:${APP_PORT:-8080}"
 log "  프론트엔드: https://dev.findplace.co.kr"
+log "  백엔드 API: https://dev.findplace.co.kr/api"
 log "=========================================="

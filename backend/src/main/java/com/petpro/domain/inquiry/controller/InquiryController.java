@@ -91,11 +91,11 @@ public class InquiryController {
      */
     @Operation(summary = "문의 삭제", description = "문의를 삭제합니다. 답변 완료된 문의는 삭제 불가.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<InquiryResponse.Success>> deleteInquiry(
+    public ResponseEntity<Void> deleteInquiry(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
         Long userId = Long.parseLong(userDetails.getUsername());
         inquiryService.deleteInquiry(userId, id);
-        return ResponseEntity.ok(ApiResponse.success(InquiryResponse.Success.of()));
+        return ResponseEntity.noContent().build();
     }
 }

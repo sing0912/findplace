@@ -13,17 +13,17 @@ const TIMER_SECONDS = 180; // 3분
 const FindIdVerifyPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { verificationId, name, phone } = location.state || {};
+  const { requestId, name, phone } = location.state || {};
 
   const [code, setCode] = useState('');
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
-  const [currentVerificationId, setCurrentVerificationId] = useState(verificationId);
+  const [currentRequestId, setCurrentRequestId] = useState(requestId);
 
   useEffect(() => {
-    if (!verificationId) {
+    if (!requestId) {
       navigate('/find-id');
       return;
     }
@@ -39,7 +39,7 @@ const FindIdVerifyPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [verificationId, navigate, currentVerificationId]);
+  }, [requestId, navigate, currentRequestId]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -58,8 +58,7 @@ const FindIdVerifyPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
-          phone,
+          requestId: currentRequestId,
         }),
       });
 
@@ -68,7 +67,7 @@ const FindIdVerifyPage: React.FC = () => {
       }
 
       const data = await response.json();
-      setCurrentVerificationId(data.verificationId);
+      setCurrentRequestId(data.requestId);
       setTimeLeft(TIMER_SECONDS);
       setCode('');
     } catch (err) {
@@ -91,7 +90,7 @@ const FindIdVerifyPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          verificationId: currentVerificationId,
+          requestId: currentRequestId,
           code,
         }),
       });

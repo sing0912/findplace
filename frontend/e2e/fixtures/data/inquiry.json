@@ -1,0 +1,59 @@
+{
+  "inquiryList": [
+    {
+      "id": 1,
+      "title": "예약 변경 문의",
+      "content": "예약 날짜를 변경하고 싶습니다.",
+      "status": "ANSWERED",
+      "createdAt": "2026-02-08T10:00:00",
+      "answer": {
+        "content": "예약 변경은 마이페이지에서 가능합니다. 예약 상세 페이지에서 변경 버튼을 클릭해주세요.",
+        "createdAt": "2026-02-08T14:00:00"
+      }
+    },
+    {
+      "id": 2,
+      "title": "결제 오류 문의",
+      "content": "결제 시 오류가 발생합니다.",
+      "status": "WAITING",
+      "createdAt": "2026-02-09T15:30:00",
+      "answer": null
+    },
+    {
+      "id": 3,
+      "title": "시터 자격 관련 문의",
+      "content": "시터 등록 자격 조건이 궁금합니다.",
+      "status": "WAITING",
+      "createdAt": "2026-02-10T08:00:00",
+      "answer": null
+    }
+  ],
+  "inquiryDetail": {
+    "id": 1,
+    "title": "예약 변경 문의",
+    "content": "예약 날짜를 변경하고 싶습니다. 2월 15일로 변경 가능할까요?",
+    "status": "ANSWERED",
+    "createdAt": "2026-02-08T10:00:00",
+    "answer": {
+      "content": "예약 변경은 마이페이지에서 가능합니다. 예약 상세 페이지에서 변경 버튼을 클릭해주세요.",
+      "createdAt": "2026-02-08T14:00:00"
+    }
+  },
+  "inquiryDetailWaiting": {
+    "id": 2,
+    "title": "결제 오류 문의",
+    "content": "결제 시 오류가 발생합니다. 카드 결제가 되지 않습니다.",
+    "status": "WAITING",
+    "createdAt": "2026-02-09T15:30:00",
+    "answer": null
+  },
+  "emptyInquiryList": [],
+  "createdInquiry": {
+    "id": 4,
+    "title": "새 문의 제목",
+    "content": "새 문의 내용입니다.",
+    "status": "WAITING",
+    "createdAt": "2026-02-10T12:00:00",
+    "answer": null
+  }
+}

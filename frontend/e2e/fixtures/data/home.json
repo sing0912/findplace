@@ -1,0 +1,121 @@
+{
+  "customerHome": {
+    "activeBooking": null,
+    "recommendedSitters": [
+      {
+        "id": 1,
+        "nickname": "김시터",
+        "profileImageUrl": null,
+        "address": "서울시 강남구",
+        "distance": 1.2,
+        "averageRating": 4.8,
+        "reviewCount": 52,
+        "completedBookingCount": 30,
+        "services": [{ "serviceType": "WALK", "serviceTypeName": "산책", "basePrice": 20000 }],
+        "acceptablePetTypes": ["DOG", "CAT"]
+      },
+      {
+        "id": 2,
+        "nickname": "이시터",
+        "profileImageUrl": null,
+        "address": "서울시 서초구",
+        "distance": 2.5,
+        "averageRating": 4.9,
+        "reviewCount": 38,
+        "completedBookingCount": 25,
+        "services": [{ "serviceType": "CARE", "serviceTypeName": "돌봄", "basePrice": 30000 }],
+        "acceptablePetTypes": ["DOG"]
+      }
+    ],
+    "recentSitters": [],
+    "eventBanners": [
+      {
+        "id": 1,
+        "title": "첫 예약 30% 할인",
+        "imageUrl": null,
+        "linkUrl": "/events/1",
+        "type": "EVENT"
+      }
+    ],
+    "communityFeeds": [
+      {
+        "id": 1,
+        "title": "강아지 산책 팁 공유",
+        "category": "TIP",
+        "categoryName": "팁",
+        "likeCount": 15,
+        "commentCount": 3,
+        "thumbnailUrl": null,
+        "createdAt": "2026-02-09T14:00:00"
+      }
+    ]
+  },
+  "partnerHome": {
+    "todaySchedule": {
+      "date": "2026-02-10",
+      "totalCount": 3,
+      "bookings": [
+        {
+          "bookingId": 101,
+          "bookingNumber": "B2026021001",
+          "customerName": "박반려",
+          "serviceType": "WALK",
+          "serviceTypeName": "산책",
+          "startDate": "2026-02-10T14:00:00",
+          "endDate": "2026-02-10T15:00:00",
+          "status": "CONFIRMED",
+          "petNames": ["초코"],
+          "petCount": 1
+        },
+        {
+          "bookingId": 102,
+          "bookingNumber": "B2026021002",
+          "customerName": "김반려",
+          "serviceType": "CARE",
+          "serviceTypeName": "돌봄",
+          "startDate": "2026-02-10T16:00:00",
+          "endDate": "2026-02-10T18:00:00",
+          "status": "CONFIRMED",
+          "petNames": ["나비"],
+          "petCount": 1
+        }
+      ]
+    },
+    "newRequestCount": 5,
+    "revenueSummary": {
+      "month": "2026-02",
+      "totalAmount": 1250000,
+      "completedBookingCount": 15,
+      "pendingAmount": 350000
+    },
+    "notices": [
+      {
+        "id": 1,
+        "title": "2월 정산 안내",
+        "createdAt": "2026-02-01T09:00:00"
+      }
+    ]
+  },
+  "emptyCustomerHome": {
+    "activeBooking": null,
+    "recommendedSitters": [],
+    "recentSitters": [],
+    "eventBanners": [],
+    "communityFeeds": []
+  },
+  "emptyPartnerHome": {
+    "todaySchedule": {
+      "date": "2026-02-10",
+      "totalCount": 0,
+      "bookings": []
+    },
+    "newRequestCount": 0,
+    "revenueSummary": {
+      "month": "2026-02",
+      "totalAmount": 0,
+      "completedBookingCount": 0,
+      "pendingAmount": 0
+    },
+    "notices": []
+  }
+}

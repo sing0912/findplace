@@ -46,8 +46,13 @@ class PetImageServiceTest {
             ReflectionTestUtils.setField(petImageService, "bucketName", "petpro");
             ReflectionTestUtils.setField(petImageService, "minioPublicUrl", "http://localhost:9000");
 
+            // JPEG magic bytes (0xFF 0xD8 0xFF) + padding
+            byte[] jpegContent = new byte[1024];
+            jpegContent[0] = (byte) 0xFF;
+            jpegContent[1] = (byte) 0xD8;
+            jpegContent[2] = (byte) 0xFF;
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "test.jpg", "image/jpeg", new byte[1024]);
+                    "file", "test.jpg", "image/jpeg", jpegContent);
 
             given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
                     .willReturn(PutObjectResponse.builder().build());

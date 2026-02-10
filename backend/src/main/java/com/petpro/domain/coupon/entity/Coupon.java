@@ -51,8 +51,8 @@ public class Coupon {
 
     /** 할인 방식 */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private DiscountMethod discountMethod;
+    @Column(name = "discount_method", nullable = false, length = 20)
+    private DiscountType discountType;
 
     /** 할인값 (금액 또는 퍼센트) */
     @Column(nullable = false, precision = 10, scale = 2)
@@ -191,7 +191,7 @@ public class Coupon {
     public BigDecimal calculateDiscount(BigDecimal orderAmount) {
         BigDecimal discount;
 
-        switch (discountMethod) {
+        switch (discountType) {
             case FIXED:
                 discount = discountValue;
                 break;
@@ -215,7 +215,7 @@ public class Coupon {
      * 할인 텍스트 생성
      */
     public String getDiscountText() {
-        return switch (discountMethod) {
+        return switch (discountType) {
             case FIXED -> String.format("%,d원 할인", discountValue.intValue());
             case PERCENT -> String.format("%d%% 할인", discountValue.intValue());
             case FREE -> "무료";

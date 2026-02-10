@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Alert } from '@mui/material';
 import { InquiryForm } from '../../components/inquiry';
 import { AuthButton } from '../../components/auth';
+import { inquiryApi } from '../../api/inquiry';
 
 const InquiryWritePage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,30 +46,11 @@ const InquiryWritePage: React.FC = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch('/api/v1/inquiries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          content: content.trim(),
-        }),
+      const data = await inquiryApi.create({
+        title: title.trim(),
+        content: content.trim(),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '문의 작성에 실패했습니다.');
-      }
-
-      const data = await response.json();
       navigate(`/mypage/inquiry/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');

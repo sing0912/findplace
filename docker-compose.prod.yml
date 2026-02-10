@@ -56,6 +56,7 @@ services:
           memory: 256M
 
   mysql-log-master:
+    image: mysql:8.0.36-debian
     security_opt:
       - no-new-privileges:true
     deploy:
@@ -64,6 +65,7 @@ services:
           memory: 512M
 
   mysql-log-slave:
+    image: mysql:8.0.36-debian
     security_opt:
       - no-new-privileges:true
     deploy:

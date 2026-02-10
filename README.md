@@ -591,7 +591,8 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 서버 배포 시 발생할 수 있는 문제들:
 
-- [실서비스 환경 세팅 가이드](./docs/troubleshooting/production-setup-guide.md)
+- [실서비스 환경 세팅 가이드](./docs/troubleshooting/production-setup-guide.md) — 초기 서버 설정
+- [프로덕션 운영 가이드](./docs/troubleshooting/production-operation-guide.md) — 배포/보안/이슈 해결
 
 주요 이슈:
 - Git/Docker/docker-compose 설치

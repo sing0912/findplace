@@ -46,6 +46,15 @@ public class PetImageService {
             "webp", new byte[]{0x52, 0x49, 0x46, 0x46}
     );
 
+    // 확장자 기반 Content-Type 매핑 (클라이언트 헤더 신뢰 방지)
+    private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
+            "jpg", "image/jpeg",
+            "jpeg", "image/jpeg",
+            "png", "image/png",
+            "gif", "image/gif",
+            "webp", "image/webp"
+    );
+
     /**
      * 프로필 이미지 업로드
      *
@@ -60,10 +69,11 @@ public class PetImageService {
         String objectKey = String.format("pets/%d/profile_%s.%s", petId, UUID.randomUUID(), extension);
 
         try {
+            String safeContentType = CONTENT_TYPE_MAP.getOrDefault(extension.toLowerCase(), "application/octet-stream");
             PutObjectRequest putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(objectKey)
-                    .contentType(file.getContentType())
+                    .contentType(safeContentType)
                     .build();
 
             s3Client.putObject(putRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));

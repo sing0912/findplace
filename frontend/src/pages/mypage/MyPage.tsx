@@ -263,7 +263,7 @@ const MyPage: React.FC = () => {
           <MenuItem
             label="약관/정책"
             icon={<Description fontSize="small" />}
-            onClick={() => navigate('/mypage/policy')}
+            onClick={() => navigate('/mypage/settings/policies')}
           />
           <MenuItem
             label="앱 정보"
