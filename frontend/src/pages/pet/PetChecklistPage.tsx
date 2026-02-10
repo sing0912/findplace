@@ -3,7 +3,7 @@
  * @see docs/develop/pet/frontend.md - U-PET-004
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -22,9 +22,7 @@ const PetChecklistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const petId = id ? Number(id) : null;
 
-  // 백엔드 체크리스트 API가 구현되면 enabled: true로 변경
-  const [fetchEnabled] = useState(false);
-  const { checklist, loading: checklistLoading, notFound } = usePetChecklist(petId, { enabled: fetchEnabled });
+  const { checklist, loading: checklistLoading, notFound, refetch } = usePetChecklist(petId);
   const {
     saveChecklist,
     loading: mutationLoading,
