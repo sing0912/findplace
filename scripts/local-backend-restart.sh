@@ -48,7 +48,7 @@ echo "  PID: $BOOT_PID"
 # 헬스체크
 echo "[3/3] 헬스체크 대기 중 (최대 2분)..."
 for i in $(seq 1 60); do
-    if curl -sf "http://localhost:$PORT/health" > /dev/null 2>&1; then
+    if curl -sf "http://localhost:$PORT/api/health" > /dev/null 2>&1; then
         echo ""
         echo "=========================================="
         echo "  백엔드 시작 완료!"
