@@ -24,9 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.security.SecureRandom;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
 
 /**
  * 인증 서비스 클래스
@@ -174,6 +174,15 @@ public class AuthService {
         return AuthResponse.Token.of(accessToken, newRefreshToken, accessTokenExpiration);
     }
 
+    /**
+     * 로그아웃 처리 - 서버 측 Refresh Token 무효화
+     */
+    @Transactional
+    public void logout(Long userId) {
+        userRepository.findByIdAndDeletedAtIsNull(userId)
+                .ifPresent(User::invalidateRefreshToken);
+    }
+
     // ==================== 중복 확인 ====================
 
     /**
@@ -240,6 +249,10 @@ public class AuthService {
 
         if (verification.isExpired()) {
             throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED, "인증번호가 만료되었습니다.");
+        }
+
+        if (verification.isMaxAttemptsExceeded()) {
+            throw new BusinessException(ErrorCode.VERIFICATION_MAX_ATTEMPTS);
         }
 
         if (!verification.matchCode(request.getCode())) {
@@ -323,6 +336,10 @@ public class AuthService {
 
         if (verification.isExpired()) {
             throw new BusinessException(ErrorCode.VERIFICATION_EXPIRED, "인증번호가 만료되었습니다.");
+        }
+
+        if (verification.isMaxAttemptsExceeded()) {
+            throw new BusinessException(ErrorCode.VERIFICATION_MAX_ATTEMPTS);
         }
 
         if (!verification.matchCode(request.getCode())) {
@@ -520,9 +537,10 @@ public class AuthService {
         return hasLetter && hasDigit && hasSpecial;
     }
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private String generateVerificationCode() {
-        Random random = new Random();
-        int code = 100000 + random.nextInt(900000);
+        int code = 100000 + SECURE_RANDOM.nextInt(900000);
         return String.valueOf(code);
     }
 }

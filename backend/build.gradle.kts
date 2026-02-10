@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.2.5"
     id("io.spring.dependency-management") version "1.1.4"
     id("jacoco")
+    id("org.owasp.dependencycheck") version "10.0.3"
 }
 
 group = "com.petpro"
@@ -132,4 +133,11 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+// OWASP Dependency-Check Configuration
+dependencyCheck {
+    failBuildOnCVSS = 7.0f   // CVSS 7.0 이상 취약점 발견 시 빌드 실패
+    analyzers.assemblyEnabled = false  // .NET 분석기 비활성화
+    nvd.apiKey = System.getenv("NVD_API_KEY") ?: ""  // NVD API 키 (선택, 속도 향상)
 }
