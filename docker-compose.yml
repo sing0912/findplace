@@ -252,6 +252,9 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     entrypoint: /bin/sh -c
     command: >
       "mc alias set myminio http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
